@@ -1,9 +1,36 @@
-def chose_card(choices=[], chosen_cards=[]):
+import sys
+import math
+
+# Auto-generated code below aims at helping you parse
+# the standard input according to the problem statement.
+
+
+# game loop
+draw_phase = True
+carte_a_choisir = []
+cartes_choisies = []
+count = 0
+first_turn = True
+command = []
+
+
+def chose_card(choices=[]):
     """
-    Determines the next card to take.
-    Change function according to strategy.
+    Chose the card to draw.
+    To adapt according to strategy.
     """
-    print("PICK 0")
+    global cartes_choisies
+    return 1
+
+
+def draw_card(choices=[]):
+    """
+    Draws a card.
+    """
+    global cartes_choisies
+    carte_choisie = chose_card(choices)
+    cartes_choisies += [choices[carte_choisie]]
+    print("PICK {} ;".format(carte_choisie))
 
 
 class Card(object):
@@ -17,7 +44,6 @@ class Card(object):
         self.attack = attack
         self.defense = defense
         self.abilities = abilities
-        self.can_attack = False
 
     def get_card_number(self):
         return self.card_number
@@ -44,21 +70,47 @@ class Card(object):
         return self.abilities
 
     def summon_card(self):
-        print("SUMMON {}".format(str(self.instance_id)))
-
-    def is_able_attack(self):
-        return self.can_attack
+        global command
+        command += "SUMMON {} ;".format(str(self.instance_id))
+        print(command, file=sys.stderr)
 
     def attack(self, target_id=-1):
-        print("ATTACK {} {}".format(str(self.instance_id), str(target_id)))
+        global command
+        command += "ATTACK {} {} ;".format(str(self.instance_id), str(target_id))
+        print(command, file=sys.stderr)
 
 
+class BoardManager(object):
+    def __init__(self, cards):
+        """
+        a definir avec parametres
+        """
+        self.my_hand = [card for card in cards if card.get_loaction() == 0]
+        self.my_board = [card for card in cards if card.get_loaction() == 1]
+        self.enemys_board = [card for card in cards
+        if card.get_loaction() == -1]
 
-draft_phase = True
-deck = []
 
-# game loop
+def creation_cards_lists (card_number, instance_id, location, card_type,
+cost, attack, defense, abilities):
+    card = Card(card_number, instance_id, location, card_type,
+    cost, attack, defense, abilities)
+    if card.get_location() == 0:
+        carte_en_main.append(card)
+    elif card.get_location() == 1:
+        carte_player_en_jeu.append(card)
+    else:
+        carte_enemi_en_jeu.append(card)
+        print("1", file = sys.stderr)
+    return carte_en_main, carte_player_en_jeu, carte_enemi_en_jeu
+
+
 while True:
+    carte_a_choisir = []
+    carte_en_main = []
+    carte_player_en_jeu = []
+    carte_enemi_en_jeu = []
+    command = ""
     for i in range(2):
         player_health, player_mana, player_deck, player_rune, player_draw = \
         [int(j) for j in input().split()]
@@ -81,7 +133,25 @@ while True:
         opponent_health_change = int(opponent_health_change)
         card_draw = int(card_draw)
 
-    if draft_phase:
-        chose_card()
+        if (draw_phase):
+            carte_a_choisir.append(Card( card_number, instance_id, location, card_type, cost, attack, defense, abilities))
+        else:
+            carte_en_main,carte_player_en_jeu,carte_enemi_en_jeu = creation_cards_lists (card_number, instance_id, location, card_type, cost, attack, defense, abilities)
+
+    if (draw_phase):
+            draw_card(carte_a_choisir)
+            if (count == 30):
+                draw_phase = False
+    else:
+        for i in carte_en_main:
+            if (player_mana >= i.get_cost()):
+                i.summon_card()
+        print(carte_en_main, file=sys.stderr)
+        for i in carte_player_en_jeu:
+            # if (len(carte_enemi_en_jeu)!=0):
+                # command+="ATTACK "+str(i.get_instance_id())+" "+str(carte_enemi_en_jeu[0].get_instance_id())+";"
+            # else:
+            i.attack()
+        print(str(command)+"PASS")
 
     print("PASS")
