@@ -7,11 +7,8 @@ import math
 
 # game loop
 draw_phase = True
-carte_a_choisir = []
-cartes_choisies = []
 count = 0
-first_turn = True
-command = []
+command = ""
 
 
 def chose_card(choices=[]):
@@ -21,16 +18,6 @@ def chose_card(choices=[]):
     """
     global cartes_choisies
     return 1
-
-
-def draw_card(choices=[]):
-    """
-    Draws a card.
-    """
-    global cartes_choisies
-    carte_choisie = chose_card(choices)
-    cartes_choisies += [choices[carte_choisie]]
-    print("PICK {} ;".format(carte_choisie))
 
 
 class Card(object):
@@ -71,45 +58,81 @@ class Card(object):
 
     def summon_card(self):
         global command
-        command += "SUMMON {} ;".format(str(self.instance_id))
+        command += "SUMMON {}; ".format(str(self.instance_id))
         print(command, file=sys.stderr)
 
-    def attack(self, target_id=-1):
+    def attack_something(self, target_id=-1):
         global command
-        command += "ATTACK {} {} ;".format(str(self.instance_id), str(target_id))
+        command += "ATTACK {} {}; ".format(str(self.instance_id), str(target_id))
         print(command, file=sys.stderr)
 
 
 class BoardManager(object):
-    def __init__(self, cards):
+    """
+    Data structure to handle cards in game.
+    """
+
+    def __init__(self):
+        self.my_hand = []
+        self.my_board = []
+        self.enemys_board = []
+        self.my_deck = []
+        self.cards_to_draw = []
+
+    def add(self, card):
         """
-        a definir avec parametres
+        Adds a card to the data structure
         """
-        self.my_hand = [card for card in cards if card.get_loaction() == 0]
-        self.my_board = [card for card in cards if card.get_loaction() == 1]
-        self.enemys_board = [card for card in cards
-        if card.get_loaction() == -1]
+        global count
+
+        if count < 30:
+            self.cards_to_draw += [card]
+
+        if not (card is Card):
+            print(type(card), file=sys.stderr)
+
+        if card.get_location() == 0:
+            self.my_hand += [card]
+
+        if card.get_location() == 1:
+            self.my_board += [card]
+
+        if card.get_location() == -1:
+            self.enemys_board += [card]
+
+    def get_my_hand(self):
+        """
+        my_hand attribute getter
+        """
+        return self.my_hand
+
+    def get_my_board(self):
+        """
+        my_board attribute getter
+        """
+        return self.my_board
+
+    def get_enemys_board(self):
+        """
+        enemys_board attribute getter
+        """
+        return self.enemys_board
+
+    def draw_card(self):
+        """
+        Draws a card.
+        """
+        global command
+        carte_choisie = chose_card(self.cards_to_draw)
+        self.my_deck += [self.cards_to_draw[carte_choisie]]
+        command += "PICK {}".format(carte_choisie)
 
 
-def creation_cards_lists (card_number, instance_id, location, card_type,
-cost, attack, defense, abilities):
-    card = Card(card_number, instance_id, location, card_type,
-    cost, attack, defense, abilities)
-    if card.get_location() == 0:
-        carte_en_main.append(card)
-    elif card.get_location() == 1:
-        carte_player_en_jeu.append(card)
-    else:
-        carte_enemi_en_jeu.append(card)
-        print("1", file = sys.stderr)
-    return carte_en_main, carte_player_en_jeu, carte_enemi_en_jeu
+bdmger = BoardManager()
 
 
 while True:
-    carte_a_choisir = []
-    carte_en_main = []
-    carte_player_en_jeu = []
-    carte_enemi_en_jeu = []
+    bdmger = BoardManager()
     command = ""
     for i in range(2):
         player_health, player_mana, player_deck, player_rune, player_draw = \
@@ -133,25 +156,25 @@ while True:
         opponent_health_change = int(opponent_health_change)
         card_draw = int(card_draw)
 
-        if (draw_phase):
-            carte_a_choisir.append(Card( card_number, instance_id, location, card_type, cost, attack, defense, abilities))
-        else:
-            carte_en_main,carte_player_en_jeu,carte_enemi_en_jeu = creation_cards_lists (card_number, instance_id, location, card_type, cost, attack, defense, abilities)
+        card = Card(card_number, instance_id, location, card_type, cost,
+        attack, defense, abilities)
+        bdmger.add(card)
 
-    if (draw_phase):
-            draw_card(carte_a_choisir)
-            if (count == 30):
-                draw_phase = False
+    if (count < 30):
+            bdmger.draw_card()
+            print(count, file=sys.stderr)
+
     else:
-        for i in carte_en_main:
+        for i in bdmger.get_my_hand():
             if (player_mana >= i.get_cost()):
                 i.summon_card()
-        print(carte_en_main, file=sys.stderr)
-        for i in carte_player_en_jeu:
-            # if (len(carte_enemi_en_jeu)!=0):
-                # command+="ATTACK "+str(i.get_instance_id())+" "+str(carte_enemi_en_jeu[0].get_instance_id())+";"
-            # else:
-            i.attack()
-        print(str(command)+"PASS")
+        for i in bdmger.get_my_board():
+            i.attack_something()
 
-    print("PASS")
+    count += 1
+
+    if command == "":
+        print("PASS")
+    else :
+        print(command, file=sys.stderr)
+        print(command)
