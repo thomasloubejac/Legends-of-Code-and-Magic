@@ -1,5 +1,6 @@
 import sys
 import math
+import random
 
 # Auto-generated code below aims at helping you parse
 # the standard input according to the problem statement.
@@ -17,7 +18,7 @@ def chose_card(choices=[]):
     To adapt according to strategy.
     """
     global cartes_choisies
-    return 1
+    return random.randint(0,2)
 
 
 class Card(object):
@@ -169,7 +170,11 @@ while True:
             if (player_mana >= i.get_cost()):
                 i.summon_card()
         for i in bdmger.get_my_board():
-            i.attack_something()
+            for j in bdmger.get_enemys_board():
+                if ("G" in j.get_abilities()):
+                    i.attack_something(j.get_instance_id())
+                else:
+                    i.attack_something()
 
     count += 1
 
