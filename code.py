@@ -22,7 +22,7 @@ def battle_actions(bdmger):
     Makes decisions during battle turns.
     """
 
-    summon, items, attackers = bdmger.availabilities()
+    summon, green_items, red_items, blue_items, attackers = bdmger.availabilities()
 
     my_hand = bdmger.get_my_hand()
     my_mana = bdmger.me.get_player_mana()
@@ -32,6 +32,18 @@ def battle_actions(bdmger):
     command = ""
     for i in summon:
         command += "SUMMON {}; ".format(str(i))
+    if len(attackers)!=0:
+        for i in green_items:
+            #pass
+            command += "USE {} {}; ".format(str(i), str(attackers[random.randint(0,len(attackers)-1)]))
+
+    if len(enemys_board)!=0:
+        for i in red_items:
+            #pass
+            command += "USE {} {}; ".format(str(i), str(enemys_board[random.randint(0,len(enemys_board)-1)].get_instance_id()))
+    for i in blue_items:
+        pass
+
     for i in attackers:
         for j in enemys_board:
             id = -1
@@ -248,11 +260,25 @@ class BoardManager(object):
             card.get_card_type() == 0)
         ]
 
-        items = [card.get_instance_id() for card in self.my_hand
+        green_items = [card.get_instance_id() for card in self.my_hand
         if
             card.get_cost() <= self.me.get_player_mana()
         &
             card.get_card_type() == 1
+        ]
+
+        red_items = [card.get_instance_id() for card in self.my_hand
+        if
+            card.get_cost() <= self.me.get_player_mana()
+        &
+            card.get_card_type() == 2
+        ]
+
+        blue_items = [card.get_instance_id() for card in self.my_hand
+        if
+            card.get_cost() <= self.me.get_player_mana()
+        &
+            card.get_card_type() == 3
         ]
 
         attackers = [card.get_instance_id() for card in self.my_board]
@@ -263,10 +289,10 @@ class BoardManager(object):
         &
             card.get_card_type() == 0
         &
-            ("Charge" in card.get_abilities())
+            ("C" in card.get_abilities())
         ]
         print(attackers,file=sys.stderr)
-        return summon, items, attackers
+        return summon, green_items, red_items, blue_items, attackers
 
 
 class GameManager(object):
