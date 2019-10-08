@@ -7,12 +7,9 @@ import random
 
 
 # game loop
-draw_phase = True
 count = 0
-command = ""
 
-
-def chose_card(choices=[]):
+def chose_card(choices=[],my_deck=[]):
     """
     Chose the card to draw.
     To adapt according to strategy.
@@ -20,8 +17,35 @@ def chose_card(choices=[]):
     global cartes_choisies
     return random.randint(0,2)
 
+def battle_actions(bdmger):
+    """
+    Makes decisions during battle turns.
+    """
+
+    summon, items, attackers = bdmger.availabilities()
+
+    my_hand = bdmger.get_my_hand()
+    my_mana = bdmger.me.get_player_mana()
+    my_board = bdmger.get_my_board()
+    enemys_board = bdmger.get_enemys_board()
+
+    command = ""
+    for i in my_hand:
+        if (my_mana >= i.get_cost()):
+            command += i.summon_card()
+    for i in my_board:
+        for j in enemys_board:
+            if ("G" in j.get_abilities()):
+                command += i.attack_something(j.get_instance_id())
+            else:
+                command += i.attack_something()
+    return command
+
 
 class Card(object):
+    """
+    Data structure to handle card information.
+    """
     def __init__(self, card_number, instance_id, location, card_type, cost,
     attack, defense, abilities):
         self.card_number = card_number
@@ -58,19 +82,63 @@ class Card(object):
         return self.abilities
 
     def summon_card(self):
-        global command
-        command += "SUMMON {}; ".format(str(self.instance_id))
-        print(command, file=sys.stderr)
+        """
+        A terme : a virer
+        """
+        command = "SUMMON {}; ".format(str(self.instance_id))
+        return command
+        # print(command, file=sys.stderr)
 
     def attack_something(self, target_id=-1):
-        global command
-        command += "ATTACK {} {}; ".format(str(self.instance_id), str(target_id))
-        print(command, file=sys.stderr)
+        """
+        A terme : a virer
+        """
+        command = "ATTACK {} {}; ".format(str(self.instance_id), str(target_id))
+        return command
+        # print(command, file=sys.stderr)
 
+class Hero(object):
+    """
+    Handles Hero information.
+    """
+
+    def __init__(self, player_health, player_mana, player_deck, player_rune, player_draw):
+        """
+        player_health, player_mana are self explanatory
+        player_deck is the number of cards left in the deck.
+        player_rune is how tf would I know.
+        player_draw is the number of cards drawn during this turn.
+        """
+        self.player_health, self.player_mana, self.player_deck, self.player_rune, self.player_draw = \
+        player_health, player_mana, player_deck, player_rune, player_draw
+
+    def get_player_health(self):
+        return self.player_health
+
+    def get_player_mana(self):
+        return self.player_mana
+
+    def get_player_deck(self):
+        return self.player_deck
+
+    def get_player_rune(self):
+        return self.player_rune
+
+    def get_player_draw(self):
+        return self.player_draw
+
+
+def process_opponent_actions(card_numbers_and_actions):
+    """
+    Process opponent actions.
+    """
+    return []
 
 class BoardManager(object):
     """
-    Data structure to handle cards in game.
+    Data structure to handle game information.
+    Don't do any default actions in __init__,
+    to avoid draw and battle phases conflicts.
     """
 
     def __init__(self):
@@ -79,68 +147,177 @@ class BoardManager(object):
         self.enemys_board = []
         self.my_deck = []
         self.cards_to_draw = []
+        self.me = None
 
-    def add(self, card):
+        self.opponent_hero = None
+        self.opponent_actions = []
+        self.opponent_hand = 0
+
+    def add_card(self, card):
         """
-        Adds a card to the data structure
+        Adds a card to the correct data structure attribute.
         """
         global count
-
-        if count < 30:
-            self.cards_to_draw += [card]
 
         if not (card is Card):
             print(type(card), file=sys.stderr)
 
-        if card.get_location() == 0:
-            self.my_hand += [card]
+        if count < 30:
+            self.cards_to_draw += [card]
 
-        if card.get_location() == 1:
-            self.my_board += [card]
+        else:
+            if card.get_location() == 0:
+                self.my_hand += [card]
 
-        if card.get_location() == -1:
-            self.enemys_board += [card]
+            if card.get_location() == 1:
+                self.my_board += [card]
+
+            if card.get_location() == -1:
+                self.enemys_board += [card]
+
+    def add_hero(self, hero):
+        """
+        Stores Hero informations.
+        """
+        if self.me is None:
+            self.me = hero
+        elif self.opponent_hero is None:
+            self.opponent_hero = hero
+        else:
+            # you're doing something wrong
+            print("Adding hero in bdmger while heroes already set", file=sys.stderr)
+
+    def add_opponent_informations(self, opponent_hand, card_numbers_and_actions):
+        """
+        collects and stores non hero opponent informations
+        """
+        self.opponent_actions = process_opponent_actions(card_numbers_and_actions)
+        self.opponent_hand = opponent_hand
+
 
     def get_my_hand(self):
         """
-        my_hand attribute getter
+        my_hand attribute getter.
         """
         return self.my_hand
 
     def get_my_board(self):
         """
-        my_board attribute getter
+        my_board attribute getter.
         """
         return self.my_board
 
     def get_enemys_board(self):
         """
-        enemys_board attribute getter
+        enemys_board attribute getter.
         """
         return self.enemys_board
 
     def draw_card(self):
         """
-        Draws a card.
+        A virer, mettre dans Game Manager.
         """
-        global command
         carte_choisie = chose_card(self.cards_to_draw)
         self.my_deck += [self.cards_to_draw[carte_choisie]]
-        command += "PICK {}".format(carte_choisie)
+        command = "PICK {}".format(carte_choisie)
+        return command
+
+    def availabilities(self):
+        """
+        Returns a list of command strings giving possible actions to take.
+        Ex : ["SUMMON 1;","ATTACK 3 -1;"]
+
+        Est-ce la bonne chose a faire ?
+        Ca fait bcp bcp de combinaisons, on devrait peut-être se limiter
+        a donner
+        [
+        qui peut attaquer (rajouter les creatures dans la main avec charge)
+        qui peut etre summon
+        quel item peut etre use
+        ]
+        (qui peut etre attaque : bah toutes les creatures du board adverse + leur hero)
+        l'IA fera le reste de l'analyse toute seule
+        """
+        summon = [card.instance_id for card in self.my_hand
+        if
+            card.get_cost() <= self.me.get_player_mana()
+        &
+            card.get_card_type() == 0
+        ]
+        items = [card.instance_id for card in self.my_hand
+        if
+            card.get_cost() <= self.me.get_player_mana()
+        &
+            card.get_card_type() == 1
+        ]
+        attackers = [card.instance_id for card in self.my_board]
+
+        attackers += [card.instance_id for card in self.my_hand
+        if
+            card.get_cost() <= self.me.get_player_mana()
+        &
+            card.get_card_type() == 0
+        &
+            ("Charge" in card.get_abilities())
+        ]
+
+        return summon, items, attackers
 
 
-bdmger = BoardManager()
+class GameManager(object):
+    """
+    Controls game actions. Decision making happens here.
+    """
+
+    def __init__(self, bdmger):
+        # self.command = ""
+        self.bdmger = bdmger
+
+    def manages(self):
+        """
+        Choses actions to take and returns them in a command string
+        """
+        global count
+        if count < 30:
+            command = self.draw_phase()
+        else:
+            command = self.battle_phase()
+        return command
+
+    def draw_phase(self):
+        """
+        Choses cards to draw.
+        """
+        carte_choisie = chose_card(self.bdmger.cards_to_draw, self.bdmger.my_deck)
+        self.bdmger.my_deck += [self.bdmger.cards_to_draw[carte_choisie]]
+        command = "PICK {}".format(carte_choisie)
+        return command
+
+    def battle_phase(self):
+        """
+        Choses battle actions to take and returns them in a command string
+        """
+        command = battle_actions(self.bdmger)
+        return command
 
 
 while True:
     bdmger = BoardManager()
     command = ""
+    card_numbers_and_actions = []
+
     for i in range(2):
         player_health, player_mana, player_deck, player_rune, player_draw = \
         [int(j) for j in input().split()]
+        hero = Hero(player_health, player_mana, player_deck, player_rune, player_draw)
+        bdmger.add_hero(hero)
+
     opponent_hand, opponent_actions = [int(i) for i in input().split()]
+
     for i in range(opponent_actions):
-        card_number_and_action = input()
+        card_numbers_and_actions += [input()]
+    bdmger.add_opponent_informations(opponent_hand, card_numbers_and_actions)
+
     card_count = int(input())
     for i in range(card_count):
         card_number, instance_id, location, card_type, cost, attack, defense, \
@@ -159,22 +336,10 @@ while True:
 
         card = Card(card_number, instance_id, location, card_type, cost,
         attack, defense, abilities)
-        bdmger.add(card)
+        bdmger.add_card(card)
 
-    if (count < 30):
-            bdmger.draw_card()
-            print(count, file=sys.stderr)
-
-    else:
-        for i in bdmger.get_my_hand():
-            if (player_mana >= i.get_cost()):
-                i.summon_card()
-        for i in bdmger.get_my_board():
-            for j in bdmger.get_enemys_board():
-                if ("G" in j.get_abilities()):
-                    i.attack_something(j.get_instance_id())
-                else:
-                    i.attack_something()
+    gMger = GameManager(bdmger)
+    command = gMger.manages()
 
     count += 1
 
