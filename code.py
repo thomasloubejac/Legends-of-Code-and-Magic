@@ -30,15 +30,14 @@ def battle_actions(bdmger):
     enemys_board = bdmger.get_enemys_board()
 
     command = ""
-    for i in my_hand:
-        if (my_mana >= i.get_cost()):
-            command += i.summon_card()
-    for i in my_board:
+    for i in summon:
+        command += "SUMMON {}; ".format(str(i))
+    for i in attackers:
         for j in enemys_board:
+            id = -1
             if ("G" in j.get_abilities()):
-                command += i.attack_something(j.get_instance_id())
-            else:
-                command += i.attack_something()
+                id = j.get_instance_id()
+            command += "ATTACK {} {}; ".format(str(i) ,str(id))
     return command
 
 
@@ -141,7 +140,7 @@ class BoardManager(object):
     to avoid draw and battle phases conflicts.
     """
 
-    def __init__(self):
+    def __init__(self, bdmger=None):
         self.my_hand = []
         self.my_board = []
         self.enemys_board = []
@@ -153,6 +152,18 @@ class BoardManager(object):
         self.opponent_actions = []
         self.opponent_hand = 0
 
+        if not (bdmger is None):
+            self.my_hand = bdmger.my_hand
+            self.my_board = bdmger.my_board
+            self.enemys_board = bdmger.enemys_board
+            self.my_deck = bdmger.my_deck
+            self.cards_to_draw = bdmger.cards_to_draw
+            self.me = bdmger.me
+
+            self.opponent_hero = bdmger.opponent_hero
+            self.opponent_actions = bdmger.opponent_actions
+            self.opponent_hand = bdmger.opponent_hand
+
     def add_card(self, card):
         """
         Adds a card to the correct data structure attribute.
@@ -160,7 +171,7 @@ class BoardManager(object):
         global count
 
         if not (card is Card):
-            print(type(card), file=sys.stderr)
+            pass #print(type(card), file=sys.stderr)
 
         if count < 30:
             self.cards_to_draw += [card]
@@ -213,15 +224,6 @@ class BoardManager(object):
         """
         return self.enemys_board
 
-    def draw_card(self):
-        """
-        A virer, mettre dans Game Manager.
-        """
-        carte_choisie = chose_card(self.cards_to_draw)
-        self.my_deck += [self.cards_to_draw[carte_choisie]]
-        command = "PICK {}".format(carte_choisie)
-        return command
-
     def availabilities(self):
         """
         Returns a list of command strings giving possible actions to take.
@@ -238,21 +240,24 @@ class BoardManager(object):
         (qui peut etre attaque : bah toutes les creatures du board adverse + leur hero)
         l'IA fera le reste de l'analyse toute seule
         """
-        summon = [card.instance_id for card in self.my_hand
+
+        summon = [card.get_instance_id() for card in self.my_hand
         if
-            card.get_cost() <= self.me.get_player_mana()
-        &
-            card.get_card_type() == 0
+            (card.get_cost() <= self.me.get_player_mana()
+        and
+            card.get_card_type() == 0)
         ]
-        items = [card.instance_id for card in self.my_hand
+
+        items = [card.get_instance_id() for card in self.my_hand
         if
             card.get_cost() <= self.me.get_player_mana()
         &
             card.get_card_type() == 1
         ]
-        attackers = [card.instance_id for card in self.my_board]
 
-        attackers += [card.instance_id for card in self.my_hand
+        attackers = [card.get_instance_id() for card in self.my_board]
+
+        attackers += [card.get_instance_id() for card in self.my_hand
         if
             card.get_cost() <= self.me.get_player_mana()
         &
@@ -260,7 +265,7 @@ class BoardManager(object):
         &
             ("Charge" in card.get_abilities())
         ]
-
+        print(attackers,file=sys.stderr)
         return summon, items, attackers
 
 
@@ -271,7 +276,7 @@ class GameManager(object):
 
     def __init__(self, bdmger):
         # self.command = ""
-        self.bdmger = bdmger
+        self.bdmger = BoardManager(bdmger)
 
     def manages(self):
         """
@@ -297,8 +302,7 @@ class GameManager(object):
         """
         Choses battle actions to take and returns them in a command string
         """
-        command = battle_actions(self.bdmger)
-        return command
+        return battle_actions(self.bdmger)
 
 
 while True:
