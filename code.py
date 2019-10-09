@@ -21,7 +21,7 @@ def battle_actions(bdmger):
     """
     Makes decisions during battle turns.
     """
-    summon, green_items, red_items, blue_items, attackers = bdmger.availabilities()
+    summon, green_items, red_items, blue_items, attackers, enemys_guards = bdmger.availabilities()
 
     my_hand = bdmger.get_my_hand()
     my_mana = bdmger.me.get_player_mana()
@@ -244,7 +244,7 @@ class BoardManager(object):
         self.command += "ATTACK {} {}; ".format(id, str(target_id))
         # print(command, file=sys.stderr)
 
-    def use(self, item, target):
+    def use(self, item, target=None):
         """
         Applique une directive d'attaque.
         """
@@ -275,6 +275,11 @@ class BoardManager(object):
             ((card.get_cost() <= self.me.get_player_mana())
         and
             (card.get_card_type() == 0))
+        ]
+
+        enemys_guards = [card for card in self.enemys_board
+        if
+            ("G" in card.get_abilities())
         ]
 
         green_items = [card for card in self.my_hand
@@ -309,7 +314,8 @@ class BoardManager(object):
             ("C" in card.get_abilities())
         ]
 
-        return summon, green_items, red_items, blue_items, attackers
+        #print([i.get_instance_id() for i in enemys_guards], file=sys.stderr)
+        return summon, green_items, red_items, blue_items, attackers, enemys_guards
 
 
 class GameManager(object):
