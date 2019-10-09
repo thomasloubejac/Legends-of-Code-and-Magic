@@ -122,6 +122,8 @@ class Hero(object):
     def get_player_draw(self):
         return self.player_draw
 
+    def pay_mana(self, cost):
+        self.player_mana -= cost
 
 def process_opponent_actions(card_numbers_and_actions):
     """
@@ -228,6 +230,7 @@ class BoardManager(object):
         """
         id = str(card.get_instance_id())
         self.command += "SUMMON {}; ".format(id)
+        self.me.pay_mana(card.get_cost())
         # print(command, file=sys.stderr)
 
     def attack(self, card, target_card=None):
@@ -248,6 +251,7 @@ class BoardManager(object):
         id = str(item.get_instance_id())
         target_id = str(target.get_instance_id())
         self.command += "USE {} {}; ".format(id, target_id)
+        self.me.pay_mana(item.get_cost())
 
     def availabilities(self):
         """
