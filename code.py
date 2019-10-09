@@ -27,29 +27,69 @@ def battle_actions(bdmger):
     my_mana = bdmger.me.get_player_mana()
     my_board = bdmger.get_my_board()
     enemys_board = bdmger.get_enemys_board()
+    end_of_turn = False
 
-    for i in summon:
-        bdmger.summon(i)
+    # 0=PASS 1=SUMMON 2=USE_GREEN 3=USE_RED 4=USE_BLUE 5=ATTACK
+    action_to_make = random.randint(0,5)
 
-    if len(attackers)!=0:
-        for i in green_items:
-            target = attackers[random.randint(0,len(attackers)-1)]
-            bdmger.use(i,target)
+    if (action_to_make == 1):
+        if (len(summon)!=0):
+            monster_to_summon = random.randint(0,len(summon)-1)
+            bdmger.summon(summon[monster_to_summon])
+        else:
+            while (action_to_make==1):
+                action_to_make = random.randint(1,5)
 
-    if len(enemys_board)!=0:
-        for i in red_items:
-            target = enemys_board[random.randint(0,len(enemys_board)-1)]
-            bdmger.use(i,target)
+    if (action_to_make == 2):
+        if (len(attackers)!=0):
+            if (len(green_items)!=0):
+                green_item_to_use = random.randint(0,len(green_items)-1)
+                attackers_to_use_on = random.randint(0,len(attackers)-1)
+                bdmger.use(green_items[green_item_to_use], attackers[attackers_to_use_on])
+            else:
+                while (action_to_make==2):
+                    action_to_make = random.randint(0,5)
+        else:
+            while (action_to_make==2):
+                action_to_make = random.randint(0,5)
 
-    for i in blue_items:
-        pass
+    if (action_to_make == 3):
+        if (len(enemys_board)!=0):
+            if (len(red_items)!=0):
+                red_item_to_use = random.randint(0,len(red_items)-1)
+                enemy_to_use_on = random.randint(0,len(enemys_board)-1)
+                bdmger.use(red_items[red_item_to_use], enemys_board[enemy_to_use_on])
+            else:
+                while (action_to_make==3):
+                    action_to_make = random.randint(0,5)
+        else:
+            while (action_to_make==3):
+                action_to_make = random.randint(0,5)
 
-    for i in attackers:
-        target = None
-        for j in enemys_board:
-            if ("G" in j.get_abilities()):
-                target = j
-        bdmger.attack(i,target)
+    if (action_to_make == 4):
+        if (len(blue_items)!=0):
+            blue_item_to_use = random.randint(0,len(blue_items)-1)
+            bdmger.use(blue_items[blue_item_to_use])
+        else:
+            while (action_to_make==4):
+                action_to_make = random.randint(0,5)
+
+    if (action_to_make==5):
+        if (len(attackers)!=0):
+            attacker_who_attack = random.randint(0,len(attackers)-1)
+            if (len(enemys_guards)!=0):
+                enemy_to_attack = random.randint(0,len(enemys_guards)-1)
+                bdmger.attack(attackers[attacker_who_attack] ,enemys_guards[enemy_to_attack])
+            else:
+                bdmger.attack(attackers[attacker_who_attack])
+        else:
+            while (action_to_make==4):
+                action_to_make = random.randint(0,5)
+
+    if (action_to_make==0):
+        end_of_turn = True
+
+    return end_of_turn
 
 
 class Card(object):
@@ -249,7 +289,9 @@ class BoardManager(object):
         Applique une directive d'attaque.
         """
         id = str(item.get_instance_id())
-        target_id = str(target.get_instance_id())
+        target_id = "-1"
+        if not (target is None):
+            target_id = str(target.get_instance_id())
         self.command += "USE {} {}; ".format(id, target_id)
         self.me.pay_mana(item.get_cost())
 
@@ -349,7 +391,8 @@ class GameManager(object):
         """
         Choses battle actions to take and returns them in a command string
         """
-        battle_actions(self.bdmger)
+        while not battle_actions(self.bdmger):
+            pass
 
 
 while True:
