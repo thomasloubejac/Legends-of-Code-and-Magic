@@ -17,11 +17,10 @@ def chose_card(choices=[],my_deck=[]):
     global cartes_choisies
     return random.randint(0,2)
 
-def battle_actions():
+def battle_actions(bdmger):
     """
     Makes decisions during battle turns.
     """
-    global bdmger
     summon, green_items, red_items, blue_items, attackers = bdmger.availabilities()
 
     my_hand = bdmger.get_my_hand()
@@ -29,33 +28,28 @@ def battle_actions():
     my_board = bdmger.get_my_board()
     enemys_board = bdmger.get_enemys_board()
 
-    command = ""
     for i in summon:
-        command += "SUMMON {}; ".format(str(i))
-        # bdmger.summon(id)
-
+        bdmger.summon(i)
 
     if len(attackers)!=0:
         for i in green_items:
-            command += "USE {} {}; ".format(str(i), str(attackers[random.randint(0,len(attackers)-1)]))
-            # bdmger.use(id1,id2)
+            target = attackers[random.randint(0,len(attackers)-1)]
+            bdmger.use(i,target)
 
     if len(enemys_board)!=0:
         for i in red_items:
-            command += "USE {} {}; ".format(str(i), str(enemys_board[random.randint(0,len(enemys_board)-1)].get_instance_id()))
-            # bdmger.use(id1,id2)
+            target = enemys_board[random.randint(0,len(enemys_board)-1)]
+            bdmger.use(i,target)
 
     for i in blue_items:
         pass
 
     for i in attackers:
-        id = -1
+        target = None
         for j in enemys_board:
             if ("G" in j.get_abilities()):
-                id = j.get_instance_id()
-        command += "ATTACK {} {}; ".format(str(i) ,str(id))
-        # bdmger.attack(id1,id2)
-    return command
+                target = j
+        bdmger.attack(i,target)
 
 
 class Card(object):
@@ -97,21 +91,6 @@ class Card(object):
     def get_abilities(self):
         return self.abilities
 
-    def summon_card(self):
-        """
-        A terme : a virer
-        """
-        command = "SUMMON {}; ".format(str(self.instance_id))
-        return command
-        # print(command, file=sys.stderr)
-
-    def attack_something(self, target_id=-1):
-        """
-        A terme : a virer
-        """
-        command = "ATTACK {} {}; ".format(str(self.instance_id), str(target_id))
-        return command
-        # print(command, file=sys.stderr)
 
 class Hero(object):
     """
@@ -168,6 +147,8 @@ class BoardManager(object):
         self.opponent_hero = None
         self.opponent_actions = []
         self.opponent_hand = 0
+
+        self.command = ""
 
         if not (bdmger is None):
             self.my_hand = bdmger.my_hand
@@ -241,6 +222,33 @@ class BoardManager(object):
         """
         return self.enemys_board
 
+    def summon(self, card):
+        """
+        Applique une directive d'invocation.
+        """
+        id = str(card.get_instance_id())
+        self.command += "SUMMON {}; ".format(id)
+        # print(command, file=sys.stderr)
+
+    def attack(self, card, target_card=None):
+        """
+        Applique une directive d'attaque.
+        """
+        id = str(card.get_instance_id())
+        target_id = -1
+        if not(target_card is None):
+            target_id = target_card.get_instance_id()
+        self.command += "ATTACK {} {}; ".format(id, str(target_id))
+        # print(command, file=sys.stderr)
+
+    def use(self, item, target):
+        """
+        Applique une directive d'attaque.
+        """
+        id = str(item.get_instance_id())
+        target_id = str(target.get_instance_id())
+        self.command += "USE {} {}; ".format(id, target_id)
+
     def availabilities(self):
         """
         Returns a list of command strings giving possible actions to take.
@@ -258,37 +266,37 @@ class BoardManager(object):
         l'IA fera le reste de l'analyse toute seule
         """
 
-        summon = [card.get_instance_id() for card in self.my_hand
+        summon = [card for card in self.my_hand
         if
             ((card.get_cost() <= self.me.get_player_mana())
         and
             (card.get_card_type() == 0))
         ]
 
-        green_items = [card.get_instance_id() for card in self.my_hand
+        green_items = [card for card in self.my_hand
         if
             ((card.get_cost() <= self.me.get_player_mana())
         and
             (card.get_card_type() == 1))
         ]
 
-        red_items = [card.get_instance_id() for card in self.my_hand
+        red_items = [card for card in self.my_hand
         if
             (card.get_cost() <= self.me.get_player_mana()
         and
             card.get_card_type() == 2)
         ]
 
-        blue_items = [card.get_instance_id() for card in self.my_hand
+        blue_items = [card for card in self.my_hand
         if
             (card.get_cost() <= self.me.get_player_mana()
         and
             card.get_card_type() == 3)
         ]
 
-        attackers = [card.get_instance_id() for card in self.my_board]
+        attackers = [card for card in self.my_board]
 
-        attackers += [card.get_instance_id() for card in self.my_hand
+        attackers += [card for card in self.my_hand
         if
             (card.get_cost() <= self.me.get_player_mana())
         and
@@ -306,7 +314,6 @@ class GameManager(object):
     """
 
     def __init__(self, bdmger):
-        # self.command = ""
         self.bdmger = BoardManager(bdmger)
 
     def manages(self):
@@ -315,10 +322,9 @@ class GameManager(object):
         """
         global count
         if count < 30:
-            command = self.draw_phase()
+            self.draw_phase()
         else:
-            command = self.battle_phase()
-        return command
+            self.battle_phase()
 
     def draw_phase(self):
         """
@@ -327,18 +333,17 @@ class GameManager(object):
         carte_choisie = chose_card(self.bdmger.cards_to_draw, self.bdmger.my_deck)
         self.bdmger.my_deck += [self.bdmger.cards_to_draw[carte_choisie]]
         command = "PICK {}".format(carte_choisie)
-        return command
+        self.bdmger.command = command
 
     def battle_phase(self):
         """
         Choses battle actions to take and returns them in a command string
         """
-        return battle_actions(self.bdmger)
+        battle_actions(self.bdmger)
 
 
 while True:
     bdmger = BoardManager()
-    command = ""
     card_numbers_and_actions = []
 
     for i in range(2):
@@ -374,7 +379,9 @@ while True:
         bdmger.add_card(card)
 
     gMger = GameManager(bdmger)
-    command = gMger.manages()
+    gMger.manages()
+
+    command = gMger.bdmger.command
 
     count += 1
 
