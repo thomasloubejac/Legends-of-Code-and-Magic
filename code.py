@@ -17,11 +17,11 @@ def chose_card(choices=[],my_deck=[]):
     global cartes_choisies
     return random.randint(0,2)
 
-def battle_actions(bdmger):
+def battle_actions():
     """
     Makes decisions during battle turns.
     """
-
+    global bdmger
     summon, green_items, red_items, blue_items, attackers = bdmger.availabilities()
 
     my_hand = bdmger.get_my_hand()
@@ -32,24 +32,29 @@ def battle_actions(bdmger):
     command = ""
     for i in summon:
         command += "SUMMON {}; ".format(str(i))
+        # bdmger.summon(id)
+
+
     if len(attackers)!=0:
         for i in green_items:
-            #pass
             command += "USE {} {}; ".format(str(i), str(attackers[random.randint(0,len(attackers)-1)]))
+            # bdmger.use(id1,id2)
 
     if len(enemys_board)!=0:
         for i in red_items:
-            #pass
             command += "USE {} {}; ".format(str(i), str(enemys_board[random.randint(0,len(enemys_board)-1)].get_instance_id()))
+            # bdmger.use(id1,id2)
+
     for i in blue_items:
         pass
 
     for i in attackers:
+        id = -1
         for j in enemys_board:
-            id = -1
             if ("G" in j.get_abilities()):
                 id = j.get_instance_id()
-            command += "ATTACK {} {}; ".format(str(i) ,str(id))
+        command += "ATTACK {} {}; ".format(str(i) ,str(id))
+        # bdmger.attack(id1,id2)
     return command
 
 
@@ -255,43 +260,43 @@ class BoardManager(object):
 
         summon = [card.get_instance_id() for card in self.my_hand
         if
-            (card.get_cost() <= self.me.get_player_mana()
+            ((card.get_cost() <= self.me.get_player_mana())
         and
-            card.get_card_type() == 0)
+            (card.get_card_type() == 0))
         ]
 
         green_items = [card.get_instance_id() for card in self.my_hand
         if
-            card.get_cost() <= self.me.get_player_mana()
-        &
-            card.get_card_type() == 1
+            ((card.get_cost() <= self.me.get_player_mana())
+        and
+            (card.get_card_type() == 1))
         ]
 
         red_items = [card.get_instance_id() for card in self.my_hand
         if
-            card.get_cost() <= self.me.get_player_mana()
-        &
-            card.get_card_type() == 2
+            (card.get_cost() <= self.me.get_player_mana()
+        and
+            card.get_card_type() == 2)
         ]
 
         blue_items = [card.get_instance_id() for card in self.my_hand
         if
-            card.get_cost() <= self.me.get_player_mana()
-        &
-            card.get_card_type() == 3
+            (card.get_cost() <= self.me.get_player_mana()
+        and
+            card.get_card_type() == 3)
         ]
 
         attackers = [card.get_instance_id() for card in self.my_board]
 
         attackers += [card.get_instance_id() for card in self.my_hand
         if
-            card.get_cost() <= self.me.get_player_mana()
-        &
-            card.get_card_type() == 0
-        &
+            (card.get_cost() <= self.me.get_player_mana())
+        and
+            (card.get_card_type() == 0)
+        and
             ("C" in card.get_abilities())
         ]
-        print(attackers,file=sys.stderr)
+
         return summon, green_items, red_items, blue_items, attackers
 
 
