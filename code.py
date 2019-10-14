@@ -1,5 +1,5 @@
 import sys
-import math
+# import math
 import random
 
 # Auto-generated code below aims at helping you parse
@@ -9,19 +9,22 @@ import random
 # game loop
 count = 0
 
-def chose_card(choices=[],my_deck=[]):
+
+def chose_card(choices=[], my_deck=[]):
     """
     Chose the card to draw.
     To adapt according to strategy.
     """
     global cartes_choisies
-    return random.randint(0,2)
+    return random.randint(0, 2)
+
 
 def battle_actions(bdmger):
     """
     Makes decisions during battle turns.
     """
-    summon, green_items, red_items, blue_items, attackers, enemys_guards = bdmger.availabilities()
+    summon, green_items, red_items, blue_items, attackers, enemys_guards = \
+        bdmger.availabilities()
 
     my_hand = bdmger.get_my_hand()
     my_mana = bdmger.me.get_player_mana()
@@ -30,63 +33,66 @@ def battle_actions(bdmger):
     end_of_turn = False
 
     # 0=PASS 1=SUMMON 2=USE_GREEN 3=USE_RED 4=USE_BLUE 5=ATTACK
-    action_to_make = random.randint(0,5)
+    action_to_make = random.randint(0, 5)
 
     if (action_to_make == 1):
-        if (len(summon)!=0):
-            monster_to_summon = random.randint(0,len(summon)-1)
+        if (len(summon) != 0):
+            monster_to_summon = random.randint(0, len(summon)-1)
             bdmger.summon(summon[monster_to_summon])
         else:
-            while (action_to_make==1):
-                action_to_make = random.randint(1,5)
+            while (action_to_make == 1):
+                action_to_make = random.randint(1, 5)
 
     if (action_to_make == 2):
-        if (len(attackers)!=0):
-            if (len(green_items)!=0):
-                green_item_to_use = random.randint(0,len(green_items)-1)
-                attackers_to_use_on = random.randint(0,len(attackers)-1)
-                bdmger.use(green_items[green_item_to_use], attackers[attackers_to_use_on])
+        if (len(attackers) != 0):
+            if (len(green_items) != 0):
+                green_item_to_use = random.randint(0, len(green_items)-1)
+                attackers_to_use_on = random.randint(0, len(attackers)-1)
+                bdmger.use(green_items[green_item_to_use],
+                           attackers[attackers_to_use_on])
             else:
-                while (action_to_make==2):
-                    action_to_make = random.randint(0,5)
+                while (action_to_make == 2):
+                    action_to_make = random.randint(0, 5)
         else:
-            while (action_to_make==2):
-                action_to_make = random.randint(0,5)
+            while (action_to_make == 2):
+                action_to_make = random.randint(0, 5)
 
     if (action_to_make == 3):
-        if (len(enemys_board)!=0):
-            if (len(red_items)!=0):
-                red_item_to_use = random.randint(0,len(red_items)-1)
-                enemy_to_use_on = random.randint(0,len(enemys_board)-1)
-                bdmger.use(red_items[red_item_to_use], enemys_board[enemy_to_use_on])
+        if (len(enemys_board) != 0):
+            if (len(red_items) != 0):
+                red_item_to_use = random.randint(0, len(red_items)-1)
+                enemy_to_use_on = random.randint(0, len(enemys_board)-1)
+                bdmger.use(red_items[red_item_to_use],
+                           enemys_board[enemy_to_use_on])
             else:
-                while (action_to_make==3):
-                    action_to_make = random.randint(0,5)
+                while (action_to_make == 3):
+                    action_to_make = random.randint(0, 5)
         else:
-            while (action_to_make==3):
-                action_to_make = random.randint(0,5)
+            while (action_to_make == 3):
+                action_to_make = random.randint(0, 5)
 
     if (action_to_make == 4):
-        if (len(blue_items)!=0):
-            blue_item_to_use = random.randint(0,len(blue_items)-1)
+        if (len(blue_items) != 0):
+            blue_item_to_use = random.randint(0, len(blue_items)-1)
             bdmger.use(blue_items[blue_item_to_use])
         else:
-            while (action_to_make==4):
-                action_to_make = random.randint(0,5)
+            while (action_to_make == 4):
+                action_to_make = random.randint(0, 5)
 
-    if (action_to_make==5):
-        if (len(attackers)!=0):
-            attacker_who_attack = random.randint(0,len(attackers)-1)
-            if (len(enemys_guards)!=0):
-                enemy_to_attack = random.randint(0,len(enemys_guards)-1)
-                bdmger.attack(attackers[attacker_who_attack] ,enemys_guards[enemy_to_attack])
+    if (action_to_make == 5):
+        if (len(attackers) != 0):
+            attacker_who_attack = random.randint(0, len(attackers)-1)
+            if (len(enemys_guards) != 0):
+                enemy_to_attack = random.randint(0, len(enemys_guards)-1)
+                bdmger.attack(attackers[attacker_who_attack],
+                              enemys_guards[enemy_to_attack])
             else:
                 bdmger.attack(attackers[attacker_who_attack])
         else:
-            while (action_to_make==4):
-                action_to_make = random.randint(0,5)
+            while (action_to_make == 4):
+                action_to_make = random.randint(0, 5)
 
-    if (action_to_make==0):
+    if (action_to_make == 0):
         end_of_turn = True
 
     return end_of_turn
@@ -97,7 +103,8 @@ class Card(object):
     Data structure to handle card information.
     """
     def __init__(self, card_number, instance_id, location, card_type, cost,
-    attack, defense, abilities):
+                 attack, defense, abilities, my_health_change,
+                 opponent_health_change, card_draw):
         self.card_number = card_number
         self.instance_id = instance_id
         self.location = location
@@ -106,6 +113,9 @@ class Card(object):
         self.attack = attack
         self.defense = defense
         self.abilities = abilities
+        self.my_health_change = my_health_change
+        self.opponent_health_change = opponent_health_change
+        self.card_draw = card_draw
 
     def get_card_number(self):
         return self.card_number
@@ -131,21 +141,84 @@ class Card(object):
     def get_abilities(self):
         return self.abilities
 
+    def get_my_health_change(self):
+        return self.my_health_change
+
+    def get_opponent_health_change(self):
+        return self.opponent_health_change
+
+    def get_card_draw(self):
+        return self.card_draw
+
+    def summon_card(self, bdmger):
+        """
+        """
+        self.location = 1
+        bdmger.me.player_health += self.my_health_change
+        bdmger.opponent_hero.player_health += self.opponent_health_change
+        bdmger.actualize_board()
+
+    def use(self, bdmger, card):
+        """
+        """
+        bdmger.me.player_health += self.my_health_change
+        bdmger.opponent_hero.player_health += self.opponent_health_change
+        card.attack += self.attack
+        card.defense += self.defense
+        self = None
+        bdmger.actualize_board()
+        # print(command, file=sys.stderr)
+
+    def attack_something(self, bdmger, target_card=None):
+        """
+        """
+
+        if target_card is None:
+            bdmger.opponent_hero.player_health -= self.attack
+            return False, False
+
+        points = target_card.defense
+        if not("W" in target_card.get_abilities()):
+            target_card.defense -= self.attack
+        else:
+            target_card.abilities = target_card.abilities.replace("W", "-")
+
+        if not("W" in self.get_abilities()):
+            self.defense -= target_card.attack
+        else:
+            self.abilities = self.abilities.replace("W", "-")
+
+        if self.defense <= 0:
+            self = None
+
+        if target_card.defense <= 0:
+            target_card is None
+
+        if not (self is None):
+            if ("B" in self.get_abilities()) and \
+                    (target_card is None):
+                bdmger.opponent_hero.player_health -= (self.attack - points)
+
+        bdmger.actualize_board()
+        # print(command, file=sys.stderr)
+
 
 class Hero(object):
     """
     Handles Hero information.
     """
 
-    def __init__(self, player_health, player_mana, player_deck, player_rune, player_draw):
+    def __init__(self, player_health, player_mana,
+                 player_deck, player_rune, player_draw):
         """
         player_health, player_mana are self explanatory
         player_deck is the number of cards left in the deck.
         player_rune is how tf would I know.
         player_draw is the number of cards drawn during this turn.
         """
-        self.player_health, self.player_mana, self.player_deck, self.player_rune, self.player_draw = \
-        player_health, player_mana, player_deck, player_rune, player_draw
+        self.player_health, self.player_mana, self.player_deck,\
+            self.player_rune, self.player_draw = \
+            player_health, player_mana, player_deck, player_rune, player_draw
 
     def get_player_health(self):
         return self.player_health
@@ -165,11 +238,13 @@ class Hero(object):
     def pay_mana(self, cost):
         self.player_mana -= cost
 
-def process_opponent_actions(card_numbers_and_actions):
+
+def process_opponent_actions(actions):
     """
-    Process opponent actions.
+    TODO mettre qqch ici
     """
-    return []
+    pass
+
 
 class BoardManager(object):
     """
@@ -211,7 +286,7 @@ class BoardManager(object):
         global count
 
         if not (card is Card):
-            pass #print(type(card), file=sys.stderr)
+            pass  # print(type(card), file=sys.stderr)
 
         if count < 30:
             self.cards_to_draw += [card]
@@ -236,15 +311,29 @@ class BoardManager(object):
             self.opponent_hero = hero
         else:
             # you're doing something wrong
-            print("Adding hero in bdmger while heroes already set", file=sys.stderr)
+            print("Adding hero in bdmger while heroes already set",
+                  file=sys.stderr)
 
-    def add_opponent_informations(self, opponent_hand, card_numbers_and_actions):
+    def add_opponent_informations(self, opponent_hand,
+                                  card_numbers_and_actions):
         """
-        collects and stores non hero opponent informations
+        Collects and stores non hero action informations.
+        Potentially useless for now.
         """
-        self.opponent_actions = process_opponent_actions(card_numbers_and_actions)
+        self.opponent_actions = process_opponent_actions(
+                                card_numbers_and_actions)
         self.opponent_hand = opponent_hand
 
+    def actualize_board(self):
+        for i in range(len(self.my_hand)):
+            if self.my_hand[i] is None:
+                self.my_hand.pop(i)
+        for i in range(len(self.my_board)):
+            if self.my_board[i] is None:
+                self.my_board.pop(i)
+        for i in range(len(self.enemys_board)):
+            if self.enemys_board[i] is None:
+                self.enemys_board.pop(i)
 
     def get_my_hand(self):
         """
@@ -271,6 +360,7 @@ class BoardManager(object):
         id = str(card.get_instance_id())
         self.command += "SUMMON {}; ".format(id)
         self.me.pay_mana(card.get_cost())
+        card.summon_card(self)
         # print(command, file=sys.stderr)
 
     def attack(self, card, target_card=None):
@@ -282,6 +372,7 @@ class BoardManager(object):
         if not(target_card is None):
             target_id = target_card.get_instance_id()
         self.command += "ATTACK {} {}; ".format(id, str(target_id))
+        card.attack_something(self, target_card)
         # print(command, file=sys.stderr)
 
     def use(self, item, target=None):
@@ -308,56 +399,58 @@ class BoardManager(object):
         qui peut etre summon
         quel item peut etre use
         ]
-        (qui peut etre attaque : bah toutes les creatures du board adverse + leur hero)
+        (qui peut etre attaque : bah toutes les creatures du board adverse
+         + leur hero)
         l'IA fera le reste de l'analyse toute seule
         """
 
         summon = [card for card in self.my_hand
-        if
-            ((card.get_cost() <= self.me.get_player_mana())
-        and
-            (card.get_card_type() == 0))
-        ]
+                  if
+                  ((card.get_cost() <= self.me.get_player_mana())
+                   and
+                   (card.get_card_type() == 0))
+                  ]
 
         enemys_guards = [card for card in self.enemys_board
-        if
-            ("G" in card.get_abilities())
-        ]
+                         if
+                         ("G" in card.get_abilities())
+                         ]
 
         green_items = [card for card in self.my_hand
-        if
-            ((card.get_cost() <= self.me.get_player_mana())
-        and
-            (card.get_card_type() == 1))
-        ]
+                       if
+                       ((card.get_cost() <= self.me.get_player_mana())
+                        and
+                        (card.get_card_type() == 1))
+                       ]
 
         red_items = [card for card in self.my_hand
-        if
-            (card.get_cost() <= self.me.get_player_mana()
-        and
-            card.get_card_type() == 2)
-        ]
+                     if
+                     (card.get_cost() <= self.me.get_player_mana()
+                      and
+                      card.get_card_type() == 2)
+                     ]
 
         blue_items = [card for card in self.my_hand
-        if
-            (card.get_cost() <= self.me.get_player_mana()
-        and
-            card.get_card_type() == 3)
-        ]
+                      if
+                      (card.get_cost() <= self.me.get_player_mana()
+                       and
+                       card.get_card_type() == 3)
+                      ]
 
         attackers = [card for card in self.my_board]
 
         attackers += [card for card in self.my_hand
-        if
-            (card.get_cost() <= self.me.get_player_mana())
-        and
-            (card.get_card_type() == 0)
-        and
-            ("C" in card.get_abilities())
-        ]
+                      if
+                      (card.get_cost() <= self.me.get_player_mana())
+                      and
+                      (card.get_card_type() == 0)
+                      and
+                      ("C" in card.get_abilities())
+                      ]
 
-        #print([i.get_instance_id() for i in enemys_guards], file=sys.stderr)
-        return summon, green_items, red_items, blue_items, attackers, enemys_guards
+        #  print([i.get_instance_id() for i in enemys_guards], file=sys.stderr)
+        return summon, green_items, red_items, blue_items,\
+            attackers, enemys_guards
 
 
 class GameManager(object):
@@ -382,7 +475,8 @@ class GameManager(object):
         """
         Choses cards to draw.
         """
-        carte_choisie = chose_card(self.bdmger.cards_to_draw, self.bdmger.my_deck)
+        carte_choisie = chose_card(self.bdmger.cards_to_draw,
+                                   self.bdmger.my_deck)
         self.bdmger.my_deck += [self.bdmger.cards_to_draw[carte_choisie]]
         command = "PICK {}".format(carte_choisie)
         self.bdmger.command = command
@@ -401,8 +495,9 @@ while True:
 
     for i in range(2):
         player_health, player_mana, player_deck, player_rune, player_draw = \
-        [int(j) for j in input().split()]
-        hero = Hero(player_health, player_mana, player_deck, player_rune, player_draw)
+            [int(j) for j in input().split()]
+        hero = Hero(player_health, player_mana, player_deck,
+                    player_rune, player_draw)
         bdmger.add_hero(hero)
 
     opponent_hand, opponent_actions = [int(i) for i in input().split()]
@@ -414,8 +509,8 @@ while True:
     card_count = int(input())
     for i in range(card_count):
         card_number, instance_id, location, card_type, cost, attack, defense, \
-        abilities, my_health_change, opponent_health_change, card_draw \
-        = input().split()
+            abilities, my_health_change, opponent_health_change, card_draw \
+            = input().split()
         card_number = int(card_number)
         instance_id = int(instance_id)
         location = int(location)
@@ -428,7 +523,8 @@ while True:
         card_draw = int(card_draw)
 
         card = Card(card_number, instance_id, location, card_type, cost,
-        attack, defense, abilities)
+                    attack, defense, abilities, my_health_change,
+                    opponent_health_change, card_draw)
         bdmger.add_card(card)
 
     gMger = GameManager(bdmger)
@@ -440,6 +536,6 @@ while True:
 
     if command == "":
         print("PASS")
-    else :
+    else:
         print(command, file=sys.stderr)
         print(command)
