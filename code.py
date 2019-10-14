@@ -1,6 +1,7 @@
 import sys
 # import math
 import random
+from copy import copy
 
 # Auto-generated code below aims at helping you parse
 # the standard input according to the problem statement.
@@ -15,13 +16,27 @@ def chose_card(choices=[], my_deck=[]):
     Chose the card to draw.
     To adapt according to strategy.
     """
-    global cartes_choisies
     return random.randint(0, 2)
 
 
-def battle_actions(bdmger):
+def battle_action(bdmger):
     """
-    Makes decisions during battle turns.
+    Makes decisions during battle turns. Old version.
+    """
+    actions = bdmger.availabilities()
+    # print(actions, file=sys.stderr)
+    action_id = random.randint(0, len(actions) - 1)
+    if action_id == 0:
+        action_id = random.randint(0, len(actions) - 1)
+    action = actions[action_id]
+    bdmger.add_command(action)
+    # print("battle action : " + action, file=sys.stderr)
+    return ("PASS" in action)
+
+
+def old_battle_action(bdmger):
+    """
+    Makes decisions during battle turns. Old version.
     """
     summon, green_items, red_items, blue_items, attackers, enemys_guards = \
         bdmger.availabilities()
@@ -37,7 +52,7 @@ def battle_actions(bdmger):
 
     if (action_to_make == 1):
         if (len(summon) != 0):
-            monster_to_summon = random.randint(0, len(summon)-1)
+            monster_to_summon = random.randint(0, len(summon) - 1)
             bdmger.summon(summon[monster_to_summon])
         else:
             while (action_to_make == 1):
@@ -46,8 +61,8 @@ def battle_actions(bdmger):
     if (action_to_make == 2):
         if (len(attackers) != 0):
             if (len(green_items) != 0):
-                green_item_to_use = random.randint(0, len(green_items)-1)
-                attackers_to_use_on = random.randint(0, len(attackers)-1)
+                green_item_to_use = random.randint(0, len(green_items) - 1)
+                attackers_to_use_on = random.randint(0, len(attackers) - 1)
                 bdmger.use(green_items[green_item_to_use],
                            attackers[attackers_to_use_on])
             else:
@@ -60,8 +75,8 @@ def battle_actions(bdmger):
     if (action_to_make == 3):
         if (len(enemys_board) != 0):
             if (len(red_items) != 0):
-                red_item_to_use = random.randint(0, len(red_items)-1)
-                enemy_to_use_on = random.randint(0, len(enemys_board)-1)
+                red_item_to_use = random.randint(0, len(red_items) - 1)
+                enemy_to_use_on = random.randint(0, len(enemys_board) - 1)
                 bdmger.use(red_items[red_item_to_use],
                            enemys_board[enemy_to_use_on])
             else:
@@ -73,7 +88,7 @@ def battle_actions(bdmger):
 
     if (action_to_make == 4):
         if (len(blue_items) != 0):
-            blue_item_to_use = random.randint(0, len(blue_items)-1)
+            blue_item_to_use = random.randint(0, len(blue_items) - 1)
             bdmger.use(blue_items[blue_item_to_use])
         else:
             while (action_to_make == 4):
@@ -81,9 +96,9 @@ def battle_actions(bdmger):
 
     if (action_to_make == 5):
         if (len(attackers) != 0):
-            attacker_who_attack = random.randint(0, len(attackers)-1)
+            attacker_who_attack = random.randint(0, len(attackers) - 1)
             if (len(enemys_guards) != 0):
-                enemy_to_attack = random.randint(0, len(enemys_guards)-1)
+                enemy_to_attack = random.randint(0, len(enemys_guards) - 1)
                 bdmger.attack(attackers[attacker_who_attack],
                               enemys_guards[enemy_to_attack])
             else:
@@ -152,25 +167,30 @@ class Card(object):
 
     def summon_card(self, bdmger):
         """
+        Call this function when card is being summoned.
+        This will update the card's location, and BoardManager's informations.
         """
         self.location = 1
         bdmger.me.player_health += self.my_health_change
         bdmger.opponent_hero.player_health += self.opponent_health_change
-        bdmger.actualize_board()
 
     def use(self, bdmger, card):
         """
+        Call this function when card is being used.
+        This will update the card's location, and BoardManager's informations.
         """
         bdmger.me.player_health += self.my_health_change
         bdmger.opponent_hero.player_health += self.opponent_health_change
-        card.attack += self.attack
-        card.defense += self.defense
-        self = None
-        bdmger.actualize_board()
-        # print(command, file=sys.stderr)
+        if card is not None:
+            card.attack += self.attack
+            card.defense += self.defense
+        # # print(command, file=sys.stderr)
 
     def attack_something(self, bdmger, target_card=None):
         """
+        Call this function when attack is being led.
+        This will update the card's information,
+        and BoardManager's informations.
         """
 
         if target_card is None:
@@ -200,7 +220,7 @@ class Card(object):
                 bdmger.opponent_hero.player_health -= (self.attack - points)
 
         bdmger.actualize_board()
-        # print(command, file=sys.stderr)
+        # # print(command, file=sys.stderr)
 
 
 class Hero(object):
@@ -253,7 +273,7 @@ class BoardManager(object):
     to avoid draw and battle phases conflicts.
     """
 
-    def __init__(self, bdmger=None):
+    def __init__(self, bdmger=None, command=[]):
         self.my_hand = []
         self.my_board = []
         self.enemys_board = []
@@ -265,19 +285,23 @@ class BoardManager(object):
         self.opponent_actions = []
         self.opponent_hand = 0
 
-        self.command = ""
+        self.command = []
+        # self.command_legal = True
 
         if not (bdmger is None):
-            self.my_hand = bdmger.my_hand
-            self.my_board = bdmger.my_board
-            self.enemys_board = bdmger.enemys_board
-            self.my_deck = bdmger.my_deck
-            self.cards_to_draw = bdmger.cards_to_draw
-            self.me = bdmger.me
+            self.my_hand = copy(bdmger.my_hand)
+            self.my_board = copy(bdmger.my_board)
+            self.enemys_board = copy(bdmger.enemys_board)
+            self.my_deck = copy(bdmger.my_deck)
+            self.cards_to_draw = copy(bdmger.cards_to_draw)
+            self.me = copy(bdmger.me)
 
-            self.opponent_hero = bdmger.opponent_hero
-            self.opponent_actions = bdmger.opponent_actions
-            self.opponent_hand = bdmger.opponent_hand
+            self.opponent_hero = copy(bdmger.opponent_hero)
+            self.opponent_actions = copy(bdmger.opponent_actions)
+            self.opponent_hand = copy(bdmger.opponent_hand)
+
+        # if not (bdmger is None) and len(command) != 0:
+        #    self.play_command()
 
     def add_card(self, card):
         """
@@ -311,8 +335,9 @@ class BoardManager(object):
             self.opponent_hero = hero
         else:
             # you're doing something wrong
-            print("Adding hero in bdmger while heroes already set",
-                  file=sys.stderr)
+            # print("Adding hero in bdmger while heroes already set",
+                    # file=sys.stderr)
+            pass
 
     def add_opponent_informations(self, opponent_hand,
                                   card_numbers_and_actions):
@@ -320,11 +345,15 @@ class BoardManager(object):
         Collects and stores non hero action informations.
         Potentially useless for now.
         """
-        self.opponent_actions = process_opponent_actions(
-                                card_numbers_and_actions)
+        self.opponent_actions =\
+            process_opponent_actions(card_numbers_and_actions)
         self.opponent_hand = opponent_hand
 
     def actualize_board(self):
+        """
+        Cleans board from dead cards.
+        """
+
         for i in range(len(self.my_hand)):
             if self.my_hand[i] is None:
                 self.my_hand.pop(i)
@@ -353,104 +382,204 @@ class BoardManager(object):
         """
         return self.enemys_board
 
+    def pick_card(self):
+        carte_choisie = chose_card(self.cards_to_draw,
+                                   self.my_deck)
+        self.my_deck += [self.cards_to_draw[carte_choisie]]
+        command = ["PICK {}".format(carte_choisie)]
+        self.command = command
+
     def summon(self, card):
         """
-        Applique une directive d'invocation.
+        Applies SUMMON directive.
         """
         id = str(card.get_instance_id())
-        self.command += "SUMMON {}; ".format(id)
+        self.command += ["SUMMON {}; ".format(id)]
         self.me.pay_mana(card.get_cost())
         card.summon_card(self)
-        # print(command, file=sys.stderr)
+        self.my_board += [copy(card)]
+        card = None
+        self.actualize_board()
+        # print("bdmger summon : " + self.command[-1], file=sys.stderr)
 
     def attack(self, card, target_card=None):
         """
-        Applique une directive d'attaque.
+        Applies ATTACK directive.
         """
         id = str(card.get_instance_id())
         target_id = -1
         if not(target_card is None):
             target_id = target_card.get_instance_id()
-        self.command += "ATTACK {} {}; ".format(id, str(target_id))
+        self.command += ["ATTACK {} {}; ".format(id, str(target_id))]
         card.attack_something(self, target_card)
-        # print(command, file=sys.stderr)
+        # print("bdmger attack : " + self.command[-1], file=sys.stderr)
 
     def use(self, item, target=None):
         """
-        Applique une directive d'attaque.
+        Applies USE directive.
         """
         id = str(item.get_instance_id())
         target_id = "-1"
         if not (target is None):
             target_id = str(target.get_instance_id())
-        self.command += "USE {} {}; ".format(id, target_id)
+        self.command += ["USE {} {}; ".format(id, target_id)]
         self.me.pay_mana(item.get_cost())
+        item.use(self, target)
+        item = None
+        self.actualize_board()
+        # print("bdmger use : " + self.command[-1], file=sys.stderr)
+
+    def add_command(self, command):
+        """
+        Parse command and applies it.
+        """
+        # print("bdmger add_command before : ", file=sys.stderr)
+        # print(self.command, file=sys.stderr)
+
+        tmp_list = command.split(";")
+        tmp_list = tmp_list[0].split(" ")  # ["USE","13","15"]
+        if "PASS" in tmp_list[0]:
+            self.command += ["PASS"]
+
+        elif tmp_list[0] == "SUMMON":
+            id = int(tmp_list[1])
+            card = [c for c in self.my_hand
+                    if c.get_instance_id() == id][0]
+            self.summon(card)
+
+        else:
+            id1, id2 = tmp_list[1], tmp_list[2]
+            id1, id2 = int(id1), int(id2)
+            card1 = [c for c in self.my_hand
+                     if c.get_instance_id() == id1][0]
+            if id2 == -1:
+                card2 = None
+            else:
+                card2 = [c for c in self.my_board + self.enemys_board
+                         if c.get_instance_id() == id2][0]
+            if tmp_list[0] == "ATTACK":
+                self.attack(card1, card2)
+            if tmp_list[0] == "USE":
+                self.use(card1, card2)
+        # print("bdmger add_command after : ", file=sys.stderr)
+        # print(self.command, file=sys.stderr)
+
+    def play_commands(self, commands):
+        """
+        Plays entire command.
+        May and may not be useless.
+        """
+        for i in commands:
+            self.add_command(i)
+        # print("bdmger play_commands : ", file=sys.stderr)
+        # print(self.command, file=sys.stderr)
 
     def availabilities(self):
         """
-        Returns a list of command strings giving possible actions to take.
+        Returns a list of command strings giving legal actions to take.
         Ex : ["SUMMON 1;","ATTACK 3 -1;"]
-
-        Est-ce la bonne chose a faire ?
-        Ca fait bcp bcp de combinaisons, on devrait peut-être se limiter
-        a donner
-        [
-        qui peut attaquer (rajouter les creatures dans la main avec charge)
-        qui peut etre summon
-        quel item peut etre use
-        ]
-        (qui peut etre attaque : bah toutes les creatures du board adverse
-         + leur hero)
-        l'IA fera le reste de l'analyse toute seule
         """
+        legal_actions = ["PASS ; "]
 
-        summon = [card for card in self.my_hand
-                  if
-                  ((card.get_cost() <= self.me.get_player_mana())
-                   and
-                   (card.get_card_type() == 0))
-                  ]
+        # SUMMON ACTIONS
+        summonable = [card.get_instance_id() for card in self.my_hand
+                      if
+                      ((card.get_cost() <= self.me.get_player_mana())
+                       and
+                       (card.get_card_type() == 0))
+                      ]
 
-        enemys_guards = [card for card in self.enemys_board
-                         if
-                         ("G" in card.get_abilities())
-                         ]
+        legal_actions += ["SUMMON {}; ".format(str(id))
+                          for id in summonable]
 
-        green_items = [card for card in self.my_hand
+        # People I can attack
+        to_attack = [card for card in self.enemys_board
+                     if
+                     ("G" in card.get_abilities())
+                     ]
+
+        if len(to_attack) == 0:
+            to_attack = self.enemys_board
+
+        to_attack = [card.get_instance_id() for card in to_attack]
+
+        # Who I can attack them with
+        # Cards that were just summoned ?
+        # Cards that already attacked ?
+        ids_cannot_attack = []
+        for card in self.my_board:
+            id = card.get_instance_id()
+            action = "SUMMON {}; ".format(id)
+            has_charge = "C" in card.get_abilities()
+            has_attacked = ["ATTACK {}".format(str(id))]
+            has_attacked = (len(has_attacked) != 0)
+            # if just summoned, no charge / already attacked
+            if ((action in self.command) and not has_charge) or has_attacked:
+                ids_cannot_attack += [id]
+
+        possible_attacks = []
+        for card in self.my_board:
+            id1 = card.get_instance_id()
+            if id1 in ids_cannot_attack:
+                pass
+            else:
+                for id2 in to_attack:
+                    legal_actions.append("ATTACK {} {}; "
+                                         .format(str(id1), str(id2)))
+        # items ?
+        green_items = [card.get_instance_id() for card in self.my_hand
                        if
                        ((card.get_cost() <= self.me.get_player_mana())
                         and
                         (card.get_card_type() == 1))
                        ]
 
-        red_items = [card for card in self.my_hand
+        red_items = [card.get_instance_id() for card in self.my_hand
                      if
                      (card.get_cost() <= self.me.get_player_mana()
                       and
                       card.get_card_type() == 2)
                      ]
 
-        blue_items = [card for card in self.my_hand
+        blue_items = [card.get_instance_id() for card in self.my_hand
                       if
                       (card.get_cost() <= self.me.get_player_mana()
                        and
                        card.get_card_type() == 3)
                       ]
 
-        attackers = [card for card in self.my_board]
+        for id1 in green_items:
+            for id2 in [card.get_instance_id() for card in self.my_board]:
+                legal_actions.append("USE {} {}; "
+                                     .format(str(id1), str(id2)))
 
-        attackers += [card for card in self.my_hand
-                      if
-                      (card.get_cost() <= self.me.get_player_mana())
-                      and
-                      (card.get_card_type() == 0)
-                      and
-                      ("C" in card.get_abilities())
-                      ]
+        for id1 in red_items:
+            for id2 in [card.get_instance_id() for card in self.enemys_board]:
+                legal_actions.append("USE {} {}; "
+                                     .format(str(id1), str(id2)))
 
-        #  print([i.get_instance_id() for i in enemys_guards], file=sys.stderr)
-        return summon, green_items, red_items, blue_items,\
-            attackers, enemys_guards
+        for id1 in blue_items:
+            for id2 in [card.get_instance_id() for card in self.enemys_board]\
+                    + [-1]:
+                legal_actions.append("USE {} {}; "
+                                     .format(str(id1), str(id2)))
+
+        print(legal_actions, file=sys.stderr)
+        return legal_actions
+
+    def generate_a_combo(self):
+        """
+        Generates a legal combo and stores it as a string list
+        in command attribute
+        """
+        # print("bdmger generate_a_combo before : ", file=sys.stderr)
+        # print(self.command, file=sys.stderr)
+
+        while not battle_action(self):
+            pass
+
+        # print("bdmger generate_a_combo after : ", file=sys.stderr)
+        # print(self.command, file=sys.stderr)
 
 
 class GameManager(object):
@@ -466,27 +595,29 @@ class GameManager(object):
         Choses actions to take and returns them in a command string
         """
         global count
+        # print("gMger manages before: ", file=sys.stderr)
+        # print(self.bdmger.command, file=sys.stderr)
+
         if count < 30:
             self.draw_phase()
         else:
             self.battle_phase()
 
+        # print("gMger manages after: ", file=sys.stderr)
+        # print(self.bdmger.command, file=sys.stderr)
+
     def draw_phase(self):
         """
         Choses cards to draw.
         """
-        carte_choisie = chose_card(self.bdmger.cards_to_draw,
-                                   self.bdmger.my_deck)
-        self.bdmger.my_deck += [self.bdmger.cards_to_draw[carte_choisie]]
-        command = "PICK {}".format(carte_choisie)
-        self.bdmger.command = command
+        self.bdmger.pick_card()
 
     def battle_phase(self):
         """
-        Choses battle actions to take and returns them in a command string
+        Choses battle actions to take and returns them in a command string.
+        TODO : remplacer par keski faut.
         """
-        while not battle_actions(self.bdmger):
-            pass
+        self.bdmger.generate_a_combo()
 
 
 while True:
@@ -530,12 +661,13 @@ while True:
     gMger = GameManager(bdmger)
     gMger.manages()
 
-    command = gMger.bdmger.command
+    command = "".join(gMger.bdmger.command)
 
     count += 1
 
     if command == "":
-        print("PASS")
+        # print("PASS")
+        pass
     else:
-        print(command, file=sys.stderr)
+        # print(command, file=sys.stderr)
         print(command)
