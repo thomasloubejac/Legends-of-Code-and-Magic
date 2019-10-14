@@ -353,6 +353,13 @@ class BoardManager(object):
         """
         return self.enemys_board
 
+    def pick_card(self):
+        carte_choisie = chose_card(self.cards_to_draw,
+                                   self.my_deck)
+        self.my_deck += [self.cards_to_draw[carte_choisie]]
+        command = ["PICK {}".format(carte_choisie)]
+        self.command = command
+
     def summon(self, card):
         """
         Applique une directive d'invocation.
