@@ -369,7 +369,7 @@ class GameManager(object):
         """
         Choses battle actions to take and returns them in a command string
         """
-        return battle_actions(self.bdmger)
+        while not battle_actions(self.bdmger)
 
 
 while True:
