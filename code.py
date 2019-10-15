@@ -220,9 +220,7 @@ class Card(object):
             if ("B" in self.get_abilities()) and \
                     (target_card.get_location() == -2):
                 bdmger.opponent_hero.player_health -= (self.attack - points)
-
-        bdmger.actualize_board()
-        # # print(command, file=sys.stderr)
+        # print(command, file=sys.stderr)
 
 
 class Hero(object):
@@ -355,17 +353,14 @@ class BoardManager(object):
         """
         Cleans board from dead cards.
         """
-        print([card.get_instance_id() for card in self.my_hand], file=sys.stderr)
-        for i in range(len(self.my_hand)):
-            if self.my_hand[i] == -2:
-                self.my_hand.pop(i)
-        print([card.get_instance_id() for card in self.my_hand], file=sys.stderr)
-        for i in range(len(self.my_board)):
-            if self.my_board[i] == -2:
-                self.my_board.pop(i)
-        for i in range(len(self.enemys_board)):
-            if self.enemys_board[i] == -2:
-                self.enemys_board.pop(i)
+        hand_to_board = [card for card in self.my_hand
+                         if (card.get_location() == 1)]
+        self.my_hand = [card for card in self.my_hand
+                        if (card.get_location() not in [1, -2])]
+        self.my_board = [card for card in self.my_board
+                         if (card.get_location() == -2)]
+        self.enemys_board = [card for card in self.enemys_board
+                             if (card.get_location() == -2)]
 
     def get_my_hand(self):
         """
@@ -396,14 +391,18 @@ class BoardManager(object):
         """
         Applies SUMMON directive.
         """
+        print("bdmger summon after: ", file=sys.stderr)
+        print([card.get_instance_id() for card in self.my_hand], file=sys.stderr)
+
         id = str(card.get_instance_id())
-        self.command += ["SUMMON {}; ".format(id)]
         self.me.pay_mana(card.get_cost())
         card.summon_card(self)
         self.my_board += [deepcopy(card)]
         card.location = -2
         self.actualize_board()
-        # print("bdmger summon : " + self.command[-1], file=sys.stderr)
+
+        print("bdmger summon after: ", file=sys.stderr)
+        print([card.get_instance_id() for card in self.my_hand], file=sys.stderr)
 
     def attack(self, card, target_card=None):
         """
@@ -413,8 +412,8 @@ class BoardManager(object):
         target_id = -1
         if not(target_card is None):
             target_id = target_card.get_instance_id()
-        self.command += ["ATTACK {} {}; ".format(id, str(target_id))]
         card.attack_something(self, target_card)
+        self.actualize_board()
         # print("bdmger attack : " + self.command[-1], file=sys.stderr)
 
     def use(self, item, target=None):
@@ -425,7 +424,6 @@ class BoardManager(object):
         target_id = "-1"
         if not (target is None):
             target_id = str(target.get_instance_id())
-        self.command += ["USE {} {}; ".format(id, target_id)]
         self.me.pay_mana(item.get_cost())
         item.use(self, target)
         self.actualize_board()
