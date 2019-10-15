@@ -513,7 +513,7 @@ class BoardManager(object):
                 self.attack(card1, card2)
             if tmp_list[0] == "USE":
                 self.use(card1, card2)
-        self.command += command
+        self.command += [command]
         # print("bdmger add_command after : ", file=sys.stderr)
         # print(self.command, file=sys.stderr)
 
@@ -576,6 +576,8 @@ class BoardManager(object):
                 for id2 in to_attack:
                     legal_actions.append("ATTACK {} {}; "
                                          .format(str(id), str(id2)))
+                legal_actions.append("ATTACK {} {}; "
+                                     .format(str(id), str(-1)))
 
         for card in self.my_board:
             id1 = card.get_instance_id()
