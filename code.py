@@ -1,7 +1,7 @@
 import sys
 # import math
 import random
-from copy import copy
+from copy import deepcopy
 
 # Auto-generated code below aims at helping you parse
 # the standard input according to the problem statement.
@@ -28,7 +28,7 @@ def battle_action(bdmger):
     action_id = random.randint(0, len(actions) - 1)
     if action_id == 0:
         action_id = random.randint(0, len(actions) - 1)
-    action = actions[action_id]
+    action = actions[-1]
     bdmger.add_command(action)
     # print("battle action : " + action, file=sys.stderr)
     return ("PASS" in action)
@@ -184,6 +184,7 @@ class Card(object):
         if card is not None:
             card.attack += self.attack
             card.defense += self.defense
+        self.location = -2
         # # print(command, file=sys.stderr)
 
     def attack_something(self, bdmger, target_card=None):
@@ -209,14 +210,15 @@ class Card(object):
             self.abilities = self.abilities.replace("W", "-")
 
         if self.defense <= 0:
-            self = None
+            # self = None
+            self.location = -2
 
         if target_card.defense <= 0:
-            target_card is None
+            target_card.location = -2
 
-        if not (self is None):
+        if not (self.location == -2):
             if ("B" in self.get_abilities()) and \
-                    (target_card is None):
+                    (target_card.get_location() == -2):
                 bdmger.opponent_hero.player_health -= (self.attack - points)
 
         bdmger.actualize_board()
@@ -289,16 +291,16 @@ class BoardManager(object):
         # self.command_legal = True
 
         if not (bdmger is None):
-            self.my_hand = copy(bdmger.my_hand)
-            self.my_board = copy(bdmger.my_board)
-            self.enemys_board = copy(bdmger.enemys_board)
-            self.my_deck = copy(bdmger.my_deck)
-            self.cards_to_draw = copy(bdmger.cards_to_draw)
-            self.me = copy(bdmger.me)
+            self.my_hand = deepcopy(bdmger.my_hand)
+            self.my_board = deepcopy(bdmger.my_board)
+            self.enemys_board = deepcopy(bdmger.enemys_board)
+            self.my_deck = deepcopy(bdmger.my_deck)
+            self.cards_to_draw = deepcopy(bdmger.cards_to_draw)
+            self.me = deepcopy(bdmger.me)
 
-            self.opponent_hero = copy(bdmger.opponent_hero)
-            self.opponent_actions = copy(bdmger.opponent_actions)
-            self.opponent_hand = copy(bdmger.opponent_hand)
+            self.opponent_hero = deepcopy(bdmger.opponent_hero)
+            self.opponent_actions = deepcopy(bdmger.opponent_actions)
+            self.opponent_hand = deepcopy(bdmger.opponent_hand)
 
         # if not (bdmger is None) and len(command) != 0:
         #    self.play_command()
@@ -353,15 +355,16 @@ class BoardManager(object):
         """
         Cleans board from dead cards.
         """
-
+        print([card.get_instance_id() for card in self.my_hand], file=sys.stderr)
         for i in range(len(self.my_hand)):
-            if self.my_hand[i] is None:
+            if self.my_hand[i] == -2:
                 self.my_hand.pop(i)
+        print([card.get_instance_id() for card in self.my_hand], file=sys.stderr)
         for i in range(len(self.my_board)):
-            if self.my_board[i] is None:
+            if self.my_board[i] == -2:
                 self.my_board.pop(i)
         for i in range(len(self.enemys_board)):
-            if self.enemys_board[i] is None:
+            if self.enemys_board[i] == -2:
                 self.enemys_board.pop(i)
 
     def get_my_hand(self):
@@ -397,8 +400,8 @@ class BoardManager(object):
         self.command += ["SUMMON {}; ".format(id)]
         self.me.pay_mana(card.get_cost())
         card.summon_card(self)
-        self.my_board += [copy(card)]
-        card = None
+        self.my_board += [deepcopy(card)]
+        card.location = -2
         self.actualize_board()
         # print("bdmger summon : " + self.command[-1], file=sys.stderr)
 
@@ -425,7 +428,6 @@ class BoardManager(object):
         self.command += ["USE {} {}; ".format(id, target_id)]
         self.me.pay_mana(item.get_cost())
         item.use(self, target)
-        item = None
         self.actualize_board()
         # print("bdmger use : " + self.command[-1], file=sys.stderr)
 
@@ -439,7 +441,7 @@ class BoardManager(object):
         tmp_list = command.split(";")
         tmp_list = tmp_list[0].split(" ")  # ["USE","13","15"]
         if "PASS" in tmp_list[0]:
-            self.command += ["PASS"]
+            pass
 
         elif tmp_list[0] == "SUMMON":
             id = int(tmp_list[1])
@@ -450,7 +452,7 @@ class BoardManager(object):
         else:
             id1, id2 = tmp_list[1], tmp_list[2]
             id1, id2 = int(id1), int(id2)
-            card1 = [c for c in self.my_hand
+            card1 = [c for c in self.my_board + self.my_hand
                      if c.get_instance_id() == id1][0]
             if id2 == -1:
                 card2 = None
@@ -461,6 +463,7 @@ class BoardManager(object):
                 self.attack(card1, card2)
             if tmp_list[0] == "USE":
                 self.use(card1, card2)
+        self.command += command
         # print("bdmger add_command after : ", file=sys.stderr)
         # print(self.command, file=sys.stderr)
 
@@ -511,20 +514,20 @@ class BoardManager(object):
             id = card.get_instance_id()
             action = "SUMMON {}; ".format(id)
             has_charge = "C" in card.get_abilities()
-            has_attacked = ["ATTACK {}".format(str(id))]
-            has_attacked = (len(has_attacked) != 0)
+            has_attacked = ["ATTACK {}".format(str(id)) in cmd
+                            for cmd in command]
+            has_attacked = True in has_attacked
             # if just summoned, no charge / already attacked
             if ((action in self.command) and not has_charge) or has_attacked:
                 ids_cannot_attack += [id]
 
-        possible_attacks = []
         for card in self.my_board:
             id1 = card.get_instance_id()
             if id1 in ids_cannot_attack:
                 pass
             else:
                 for id2 in to_attack:
-                    legal_actions.append("ATTACK {} {}; "
+                    legal_actions.append("ATTACK {} {}; "
                                          .format(str(id1), str(id2)))
         # items ?
         green_items = [card.get_instance_id() for card in self.my_hand
