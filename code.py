@@ -131,6 +131,8 @@ class Card(object):
         self.my_health_change = my_health_change
         self.opponent_health_change = opponent_health_change
         self.card_draw = card_draw
+        self.has_attacked = False
+        self.just_summoned = False
 
     def get_card_number(self):
         return self.card_number
@@ -165,6 +167,26 @@ class Card(object):
     def get_card_draw(self):
         return self.card_draw
 
+    # abilities getters
+
+    def has_charge(self):
+        return "C" in self.get_abilities()
+
+    def has_ward(self):
+        return "W" in self.get_abilities()
+
+    def has_breakthrough(self):
+        return "B" in self.get_abilities()
+
+    def has_drain(self):
+        return "D" in self.get_abilities()
+
+    def has_guard(self):
+        return "G" in self.get_abilities()
+
+    def has_lethal(self):
+        return "L" in self.get_abilities()
+
     def summon_card(self, bdmger):
         """
         Call this function when card is being summoned.
@@ -173,6 +195,7 @@ class Card(object):
         self.location = 1
         bdmger.me.player_health += self.my_health_change
         bdmger.opponent_hero.player_health += self.opponent_health_change
+        self.just_summoned = True
 
     def use(self, bdmger, card):
         """
@@ -199,12 +222,12 @@ class Card(object):
             return False, False
 
         points = target_card.defense
-        if not("W" in target_card.get_abilities()):
+        if not target_card.has_ward():
             target_card.defense -= self.attack
         else:
             target_card.abilities = target_card.abilities.replace("W", "-")
 
-        if not("W" in self.get_abilities()):
+        if not self.has_ward():
             self.defense -= target_card.attack
         else:
             self.abilities = self.abilities.replace("W", "-")
@@ -217,9 +240,10 @@ class Card(object):
             target_card.location = -2
 
         if not (self.location == -2):
-            if ("B" in self.get_abilities()) and \
+            if (self.has_breakthrough()) and \
                     (target_card.get_location() == -2):
                 bdmger.opponent_hero.player_health -= (self.attack - points)
+        self.has_attacked = True
         # print(command, file=sys.stderr)
 
 
@@ -358,9 +382,9 @@ class BoardManager(object):
         self.my_hand = [card for card in self.my_hand
                         if (card.get_location() not in [1, -2])]
         self.my_board = [card for card in self.my_board
-                         if (card.get_location() == -2)]
+                         if (card.get_location() == 1)]
         self.enemys_board = [card for card in self.enemys_board
-                             if (card.get_location() == -2)]
+                             if (card.get_location() == -1)]
 
     def get_my_hand(self):
         """
@@ -391,18 +415,12 @@ class BoardManager(object):
         """
         Applies SUMMON directive.
         """
-        print("bdmger summon after: ", file=sys.stderr)
-        print([card.get_instance_id() for card in self.my_hand], file=sys.stderr)
-
         id = str(card.get_instance_id())
         self.me.pay_mana(card.get_cost())
         card.summon_card(self)
         self.my_board += [deepcopy(card)]
         card.location = -2
         self.actualize_board()
-
-        print("bdmger summon after: ", file=sys.stderr)
-        print([card.get_instance_id() for card in self.my_hand], file=sys.stderr)
 
     def attack(self, card, target_card=None):
         """
@@ -510,23 +528,25 @@ class BoardManager(object):
         ids_cannot_attack = []
         for card in self.my_board:
             id = card.get_instance_id()
-            action = "SUMMON {}; ".format(id)
-            has_charge = "C" in card.get_abilities()
-            has_attacked = ["ATTACK {}".format(str(id)) in cmd
-                            for cmd in command]
-            has_attacked = True in has_attacked
+
+            just_summoned = card.just_summoned
+
+            has_charge = card.has_charge()
+            has_attacked = card.has_attacked
             # if just summoned, no charge / already attacked
-            if ((action in self.command) and not has_charge) or has_attacked:
-                ids_cannot_attack += [id]
+            if has_attacked:
+                pass  # don't attack
+            elif just_summoned and not has_charge:
+                pass  # don't attack
+            else:  # when hasn't attacked AND was not just summon without C
+                for id2 in to_attack:
+                    legal_actions.append("ATTACK {} {}; "
+                                         .format(str(id), str(id2)))
 
         for card in self.my_board:
             id1 = card.get_instance_id()
             if id1 in ids_cannot_attack:
                 pass
-            else:
-                for id2 in to_attack:
-                    legal_actions.append("ATTACK {} {}; "
-                                         .format(str(id1), str(id2)))
         # items ?
         green_items = [card.get_instance_id() for card in self.my_hand
                        if
