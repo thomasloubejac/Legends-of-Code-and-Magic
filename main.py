@@ -72,12 +72,20 @@ def simulation (board):
     
     return final_boards[0]
 
-def chose_card(choices=[], my_deck=[]):
+def chose_card(bdmger, choices=[], my_deck=[]):
     """
     Chose the card to draw.
     To adapt according to strategy.
     """
-    return random.randint(0, 2)
+    if (count < 15):
+        chosen_card = max(bdmger.cards_to_draw, key = Card.card_evaluation)
+        index = choices.index(chosen_card)
+        print (bdmger.cards_to_draw,file = sys.stderr)
+
+        return index
+ 
+    else:
+        return random.randint(0, 2)
 
 
 def battle_action(bdmger):
@@ -306,7 +314,71 @@ class Card(object):
                 bdmger.opponent_hero.player_health -= (self.attack - points)
         self.has_attacked = True
         # print(command, file=sys.stderr)
+        
+    def card_evaluation (self):
 
+            result =0
+            
+            weight_breakthrought = 1
+            weight_charge = 1
+            weight_drain = 1
+            weight_guard = 1
+            weight_letal = 3
+            weight_ward = 3
+            weight_attack = 1
+            weight_cost = 1
+            weight_defense = 3
+
+            weight_card = [weight_breakthrought,weight_charge,weight_drain,weight_guard,weight_ward,weight_attack,weight_cost,weight_defense]
+
+            #Evaluation of all cards
+
+            breakthrought = 0
+            charge = 0
+            drain = 0
+            guard = 0
+            letal = 0
+            ward = 0
+
+            spells = self.get_abilities()
+            if "B" in spells :
+                breakthrought = 1 * weight_breakthrought
+            if "C" in spells :
+                charge = 1 * weight_charge
+            if "D" in spells :
+                drain = 1 * weight_drain
+            if "G" in spells :
+                guard = 1 * weight_guard
+            if "L" in spells :
+                letal = 1 * weight_letal
+            if "W" in spells :
+                ward = 1 * weight_ward
+
+            attack = self.get_attack() * weight_attack
+            cost = self.get_cost() * weight_cost
+            defense = self.get_defense() * weight_defense
+
+            location = self.get_location()
+            type = self.get_card_type()
+
+            if location == 0:
+
+                if type == 0:
+                    #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)),file=sys.stderr)
+                    result += (attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)
+
+                else:
+                    #print(str(i.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
+                    result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
+
+            elif location == 1:
+                    #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
+                    result += (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
+            else:
+                #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
+                result -= (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
+
+            return result
 
 class Hero(object):
     """
@@ -466,7 +538,7 @@ class BoardManager(object):
         return self.enemys_board
 
     def pick_card(self):
-        carte_choisie = chose_card(self.cards_to_draw,
+        carte_choisie = chose_card(self, self.cards_to_draw,
                                    self.my_deck)
         self.my_deck += [self.cards_to_draw[carte_choisie]]
         command = ["PICK {}".format(carte_choisie)]
@@ -738,9 +810,9 @@ class BoardManager(object):
 
             #Evaluation of the state of Heroes
 
-            health_weight = 1
+            health_weight = 0.5
             deck_weight = 1/6
-            mana_weight = 1
+            mana_weight = 5
             rune_weight = 1
             hand_weight = 1
 
@@ -762,7 +834,7 @@ class BoardManager(object):
             weight_breakthrought = 1
             weight_charge = 1
             weight_drain = 1
-            weight_guard = 1
+            weight_guard = 2
             weight_letal = 6
             weight_ward = 6
             weight_attack = 1
@@ -818,7 +890,7 @@ class BoardManager(object):
                         result += (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
                 else:
                     #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                    result -= (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
+                    result -= 2*(attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
 
         return result
 class GameManager(object):
