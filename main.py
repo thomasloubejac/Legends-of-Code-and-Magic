@@ -376,6 +376,7 @@ class Card(object):
 
         if target_card is None:
             bdmger.opponent_hero.player_health -= self.attack
+            self.has_attacked = True
             return False, False
 
         points = target_card.defense
