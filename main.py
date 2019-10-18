@@ -37,7 +37,7 @@ def raise_timeout(signum, frame):
 def simulation (board):
     sim_count = 0
     final_boards = []
-    number_of_boards_at_start = 15
+    number_of_boards_at_start = 10
     number_of_person_to_mutate = 5
     with timeout(0.097):
 
@@ -83,7 +83,7 @@ def chose_card(bdmger):
     """
     max_object = 5
 
-    if (count < 15):
+    if (count < 17):
         chosen_card = max(bdmger.cards_to_draw, key = Card.card_evaluation)
         index = bdmger.cards_to_draw.index(chosen_card)
 
@@ -995,7 +995,7 @@ class BoardManager(object):
                         result += (attack + (attack * breakthrought) + (attack * drain)  + defense/3 + (defense/3 * guard) + letal + ward)
                 else:
                     #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                    result -= 3*(2*attack + (2*attack * breakthrought) + (2*attack * drain)  + defense/3 + (defense * guard) + letal + ward)
+                    result -= 2*(2*attack + (2*attack * breakthrought) + (2*attack * drain)  + defense/3 + (defense * guard) + letal + ward)
 
         return result
 class GameManager(object):
