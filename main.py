@@ -39,10 +39,10 @@ def simulation (board):
     final_boards = []
     number_of_boards_at_start = 15
     number_of_person_to_mutate = 5
-    with timeout(0.09):
-        
+    with timeout(0.097):
+
         # Creation of boards to start the evolution
-        
+
         for i in range (number_of_boards_at_start):
             simulated_board = deepcopy(board)
             simulated_board.generate_a_combo()
@@ -50,7 +50,7 @@ def simulation (board):
         #final_boards.sort(reverse = True ,key=BoardManager.evaluate)
 
         #Mutation
-        
+
         while (True):
             boards_to_mutate = []
             for i in range (number_of_person_to_mutate):
@@ -60,19 +60,18 @@ def simulation (board):
                 final_boards.remove(board_to_mutate)
                 mutate_from = random.randint(0,len(board_to_mutate.command)-1)
                 prefixcommand = []
-                
+
                 for j in range(mutate_from):
                     prefixcommand += [board_to_mutate.command[j]]
-               
+
                 #print("prefix "+ str(sim_count)+ " : " + str(prefixcommand),file=sys.stderr)
                 new_board.play_commands(prefixcommand)
                 new_board.generate_a_combo()
                 #print("combo "+ str(sim_count)+ " : " + str(new_board.command) ,file=sys.stderr)
                 sim_count += 1
                 boards_to_mutate.append(new_board)
-                
-            final_boards = boards_to_mutate    
-            
+
+            final_boards = boards_to_mutate
     #final_boards.sort(reverse = True ,key=BoardManager.evaluate)
     print(sim_count+1, file= sys.stderr)
     return max(final_boards,key=BoardManager.evaluate)
@@ -83,26 +82,26 @@ def chose_card(bdmger):
     To adapt according to strategy.
     """
     max_object = 5
-    
+
     if (count < 15):
         chosen_card = max(bdmger.cards_to_draw, key = Card.card_evaluation)
         index = bdmger.cards_to_draw.index(chosen_card)
 
         return index
- 
+
     else:
         card_index_which_can_be_chosen = []
         number_of_objects = bdmger.number_of_object_in_deck
         card_to_draw_mana_cost = [bdmger.cards_to_draw[0].get_cost(),bdmger.cards_to_draw[1].get_cost(),bdmger.cards_to_draw[2].get_cost()]
         number_of_cards_min_7_mana = sum(bdmger.creatures_mana_cost_list[6:])
-        number_of_cards_max_4_mana = sum(bdmger.creatures_mana_cost_list[:4])
+        number_of_cards_max_3_mana = sum(bdmger.creatures_mana_cost_list[:3])
 
-        
-        if(number_of_cards_max_4_mana >= 7 ):
 
-            
+        if(number_of_cards_max_3_mana >= 7 ):
+
+
             if (number_of_objects >= 5):
-                
+
                 if ((bdmger.cards_to_draw[0].get_card_type() != 0) or (bdmger.cards_to_draw[1].get_card_type() != 0) or (bdmger.cards_to_draw[2].get_card_type() != 0)):
                     if (bdmger.cards_to_draw[0].get_card_type() != 0):
                         card_index_which_can_be_chosen.append(0)
@@ -111,13 +110,13 @@ def chose_card(bdmger):
                     if (bdmger.cards_to_draw[2].get_card_type() != 0):
                         card_index_which_can_be_chosen.append(2)
                 else:
-                    
+
                     card_index_which_can_be_chosen.append(0)
                     card_index_which_can_be_chosen.append(1)
                     card_index_which_can_be_chosen.append(2)
 
             else:
-                
+
                 card_index_which_can_be_chosen.append(0)
                 card_index_which_can_be_chosen.append(1)
                 card_index_which_can_be_chosen.append(2)
@@ -130,11 +129,11 @@ def chose_card(bdmger):
                             card_index_which_can_be_chosen.pop(card_index_which_can_be_chosen.index(i))
 
         else:
-            
-            if (min(card_to_draw_mana_cost) > 4):
+
+            if (min(card_to_draw_mana_cost) > 3):
 
                     if (number_of_objects >= 5):
-                        
+
                         if ((bdmger.cards_to_draw[0].get_card_type() != 0) or (bdmger.cards_to_draw[1].get_card_type() != 0) or (bdmger.cards_to_draw[2].get_card_type() != 0)):
                             if (bdmger.cards_to_draw[0].get_card_type() != 0):
                                 card_index_which_can_be_chosen.append(0)
@@ -143,13 +142,13 @@ def chose_card(bdmger):
                             if (bdmger.cards_to_draw[2].get_card_type() != 0):
                                 card_index_which_can_be_chosen.append(2)
                         else:
-                            
+
                             card_index_which_can_be_chosen.append(0)
                             card_index_which_can_be_chosen.append(1)
                             card_index_which_can_be_chosen.append(2)
 
                     else:
-                        
+
                         card_index_which_can_be_chosen.append(0)
                         card_index_which_can_be_chosen.append(1)
                         card_index_which_can_be_chosen.append(2)
@@ -161,20 +160,21 @@ def chose_card(bdmger):
                                 if i in card_index_which_can_be_chosen:
                                     card_index_which_can_be_chosen.pop(card_index_which_can_be_chosen.index(i))
 
-                    
+
             else:
+
                 for i in range (len(card_to_draw_mana_cost)):
-                    if (card_to_draw_mana_cost[i] <= 4):
-                        card_index_which_can_be_chosen.append(i)       
-                        
+                    if (card_to_draw_mana_cost[i] <= 3):
+                        card_index_which_can_be_chosen.append(i)
+
         # card_index_which_can_be_chosen contient les indices, il suffit de prendre la meilleure carte
-        
+
         print(card_index_which_can_be_chosen,file=sys.stderr)
         list_of_cards_which_can_be_chosen = []
-        
+
         for i in card_index_which_can_be_chosen:
             list_of_cards_which_can_be_chosen.append(bdmger.cards_to_draw[i])
-        
+
         chosen_card = max(list_of_cards_which_can_be_chosen, key = Card.card_evaluation)
         index = bdmger.cards_to_draw.index(chosen_card)
 
@@ -408,11 +408,11 @@ class Card(object):
                 bdmger.opponent_hero.player_health -= (self.attack - points)
         self.has_attacked = True
         # print(command, file=sys.stderr)
-        
+
     def card_evaluation (self):
 
             result =0
-            
+
             weight_breakthrought = 1
             weight_charge = 1
             weight_drain = 1
@@ -420,7 +420,7 @@ class Card(object):
             weight_letal = 3
             weight_ward = 3
             weight_attack = 1
-            weight_cost = 1
+            weight_cost = 1/3
             weight_defense = 4
 
             weight_card = [weight_breakthrought,weight_charge,weight_drain,weight_guard,weight_ward,weight_attack,weight_cost,weight_defense]
@@ -459,14 +459,14 @@ class Card(object):
 
                 if type == 0:
                     #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                    result += (attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)
+                    result += (attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)*(cost)
 
                 else:
                     #print(str(i.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
                     if (type != 3 ):
                         result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
                     else:
-                         result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+5)
+                         result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
             elif location == 1:
                     #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
                     result += (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
@@ -636,15 +636,15 @@ class BoardManager(object):
         enemys_board attribute getter.
         """
         return self.enemys_board
-            
+
     def pick_card(self):
-        carte_choisie = chose_card(self)                        
+        carte_choisie = chose_card(self)
         self.my_deck += [self.cards_to_draw[carte_choisie]]
         if (self.cards_to_draw[carte_choisie].get_card_type() == 0):
             self.creatures_mana_cost_list[self.cards_to_draw[carte_choisie].get_cost() - 1] += 1
         else :
             self.number_of_object_in_deck += 1
-        
+
         command = ["PICK {}".format(carte_choisie)]
         self.command = command
 
@@ -1035,7 +1035,7 @@ class GameManager(object):
         """
         simulation_result = simulation(self.bdmger)
         print("Result of Simulation :" + str(simulation_result.command), file=sys.stderr)
-        
+
         self.bdmger.play_commands(simulation_result.command)
 
 
