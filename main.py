@@ -35,8 +35,9 @@ def raise_timeout(signum, frame):
     raise TimeoutError
 
 def simulation (board):
+    sim_count = 0
     final_boards = []
-    number_of_boards_at_start = 10
+    number_of_boards_at_start = 15
     number_of_person_to_mutate = 5
     with timeout(0.09):
         
@@ -46,31 +47,35 @@ def simulation (board):
             simulated_board = deepcopy(board)
             simulated_board.generate_a_combo()
             final_boards.append(simulated_board)
-        final_boards.sort(reverse = True ,key=BoardManager.evaluate)
+        #final_boards.sort(reverse = True ,key=BoardManager.evaluate)
 
         #Mutation
         
         while (True):
-
+            boards_to_mutate = []
             for i in range (number_of_person_to_mutate):
                 new_board = deepcopy(board)
-                mutate_from = random.randint(0,len(final_boards[i].command)-1)
+                board_to_mutate = max(final_boards,key=BoardManager.evaluate)
+                boards_to_mutate.append(board_to_mutate)
+                final_boards.remove(board_to_mutate)
+                mutate_from = random.randint(0,len(board_to_mutate.command)-1)
                 prefixcommand = []
                 
                 for j in range(mutate_from):
-                    #print(final_boards[i].command[j],file=sys.stderr)
-                    prefixcommand += [(final_boards[i].command[j])]
-
+                    prefixcommand += [board_to_mutate.command[j]]
+               
+                #print("prefix "+ str(sim_count)+ " : " + str(prefixcommand),file=sys.stderr)
                 new_board.play_commands(prefixcommand)
                 new_board.generate_a_combo()
+                #print("combo "+ str(sim_count)+ " : " + str(new_board.command) ,file=sys.stderr)
+                sim_count += 1
+                boards_to_mutate.append(new_board)
                 
-                final_boards.append(new_board)
-
-            final_boards.sort(reverse = True ,key=BoardManager.evaluate)
-
-    final_boards.sort(reverse = True ,key=BoardManager.evaluate)
-    
-    return final_boards[0]
+            final_boards = boards_to_mutate    
+            
+    #final_boards.sort(reverse = True ,key=BoardManager.evaluate)
+    print(sim_count+1, file= sys.stderr)
+    return max(final_boards,key=BoardManager.evaluate)
 
 def chose_card(bdmger):
     """
@@ -93,7 +98,7 @@ def chose_card(bdmger):
         number_of_cards_max_4_mana = sum(bdmger.creatures_mana_cost_list[:4])
 
         
-        if(number_of_cards_max_4_mana >= 10 ):
+        if(number_of_cards_max_4_mana >= 7 ):
 
             
             if (number_of_objects >= 5):
@@ -152,7 +157,7 @@ def chose_card(bdmger):
                     for i in range(len(card_to_draw_mana_cost)):
 
                         if (card_to_draw_mana_cost[i] > 7):
-                            if (number_of_cards_min_7_mana >= 5):
+                            if (number_of_cards_min_7_mana >= 6):
                                 if i in card_index_which_can_be_chosen:
                                     card_index_which_can_be_chosen.pop(card_index_which_can_be_chosen.index(i))
 
@@ -458,11 +463,13 @@ class Card(object):
 
                 else:
                     #print(str(i.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                    result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
-
+                    if (type != 3 ):
+                        result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
+                    else:
+                         result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+5)
             elif location == 1:
                     #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                    result += (attack + (attack * breakthrought) + (attack * drain)  + defense/3 + (defense/3 * guard) + letal + ward)
+                    result += (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
             else:
                 #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
                 result -= (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
@@ -925,15 +932,16 @@ class BoardManager(object):
             result += (self.me.get_player_rune() - self.opponent_hero.get_player_rune())*rune_weight
             #print("HAND" + str ((len(self.get_my_hand()) - self.opponent_hand)*hand_weight),file=sys.stderr)
             result += (len(self.get_my_hand()) - self.opponent_hand)*hand_weight
-
+            if (self.opponent_hero.get_player_health() == 0):
+                result += 9999
             #Weight of Card's attribute
 
             weight_breakthrought = 1
             weight_charge = 1
             weight_drain = 1
-            weight_guard = 2
-            weight_letal = 6
-            weight_ward = 6
+            weight_guard = 1
+            weight_letal = 3
+            weight_ward = 3
             weight_attack = 1
             weight_cost = 1
             weight_defense = 1
@@ -984,10 +992,10 @@ class BoardManager(object):
 
                 elif location == 1:
                         #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                        result += (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
+                        result += (attack + (attack * breakthrought) + (attack * drain)  + defense/3 + (defense/3 * guard) + letal + ward)
                 else:
                     #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                    result -= 3*(attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
+                    result -= 3*(2*attack + (2*attack * breakthrought) + (2*attack * drain)  + defense/3 + (defense * guard) + letal + ward)
 
         return result
 class GameManager(object):
