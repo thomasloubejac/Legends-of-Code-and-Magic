@@ -750,15 +750,18 @@ class BoardManager(object):
                           for id in summonable]
 
         # People I can attack
+
         to_attack = [card for card in self.enemys_board
                      if
                      ("G" in card.get_abilities())
                      ]
+        to_attack = [card.get_instance_id() for card in to_attack]
+
 
         if len(to_attack) == 0:
             to_attack = self.enemys_board
+            to_attack = [card.get_instance_id() for card in to_attack] + [-1]
 
-        to_attack = [card.get_instance_id() for card in to_attack] + [-1]
 
         # Who I can attack them with
         # Cards that were just summoned ?
