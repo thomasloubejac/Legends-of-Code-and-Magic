@@ -39,7 +39,7 @@ weight_battle_opponent = 1
 
 weight_battle_card = [weight_battle_breakthrought,weight_battle_charge,weight_battle_drain,weight_battle_guard,weight_battle_letal,weight_battle_ward,weight_battle_attack,weight_battle_cost,weight_battle_defense,weight_battle_opponent]
 
-health_weight = 0.25
+health_weight = 1/4
 deck_weight = 1/6
 mana_weight = 5
 rune_weight = 1
@@ -476,14 +476,20 @@ class Card(object):
             ward = 1 * weight_ward
 
         attack = self.get_attack() * weight_attack
+        
+        location = self.get_location()
+        type = self.get_card_type()
+        
         if (count<30):
-            cost = 1/((self.get_cost() * weight_cost)+1)
+            if (type == 0):
+                cost = 1/((self.get_cost() * weight_cost)+1)
+            else : 
+                cost = self.get_cost() * weight_cost + 1
         else:
             cost = self.get_cost() * weight_cost + 1
         defense = self.get_defense() * weight_defense
 
-        location = self.get_location()
-        type = self.get_card_type()
+     
 
         if location == 0:
 
