@@ -13,6 +13,38 @@ from contextlib import contextmanager
 # game loop
 count = 0
 
+weight_draw_breakthrought = 1
+weight_draw_charge = 1
+weight_draw_drain = 1
+weight_draw_guard = 1
+weight_draw_letal = 3
+weight_draw_ward = 3
+weight_draw_attack = 1
+weight_draw_cost = 1/3
+weight_draw_defense = 4
+weight_draw_opponent = 0
+
+weight_draw_card = [weight_draw_breakthrought, weight_draw_charge, weight_draw_drain, weight_draw_guard, weight_draw_letal, weight_draw_ward, weight_draw_attack, weight_draw_cost, weight_draw_defense, weight_draw_opponent]
+
+weight_battle_breakthrought = 1
+weight_battle_charge = 1
+weight_battle_drain = 1
+weight_battle_guard = 1
+weight_battle_letal = 3
+weight_battle_ward = 3
+weight_battle_attack = 1
+weight_battle_cost = 1
+weight_battle_defense = 1
+weight_battle_opponent = 1
+
+weight_battle_card = [weight_battle_breakthrought,weight_battle_charge,weight_battle_drain,weight_battle_guard,weight_battle_letal,weight_battle_ward,weight_battle_attack,weight_battle_cost,weight_battle_defense,weight_battle_opponent]
+
+health_weight = 0.25
+deck_weight = 1/6
+mana_weight = 5
+rune_weight = 1
+hand_weight = 1
+
 @contextmanager
 
 def timeout(time):
@@ -94,20 +126,20 @@ def chose_card(bdmger):
         number_of_objects = bdmger.number_of_object_in_deck
         card_to_draw_mana_cost = [bdmger.cards_to_draw[0].get_cost(),bdmger.cards_to_draw[1].get_cost(),bdmger.cards_to_draw[2].get_cost()]
         number_of_cards_min_7_mana = sum(bdmger.creatures_mana_cost_list[6:])
-        number_of_cards_max_3_mana = sum(bdmger.creatures_mana_cost_list[:3])
+        number_of_cards_max_3_mana = sum(bdmger.creatures_mana_cost_list[:4])
 
 
-        if(number_of_cards_max_3_mana >= 7 ):
+        if(number_of_cards_max_3_mana >= 10 ):
 
 
             if (number_of_objects >= 5):
 
-                if ((bdmger.cards_to_draw[0].get_card_type() != 0) or (bdmger.cards_to_draw[1].get_card_type() != 0) or (bdmger.cards_to_draw[2].get_card_type() != 0)):
-                    if (bdmger.cards_to_draw[0].get_card_type() != 0):
+                if ((bdmger.cards_to_draw[0].get_card_type() == 0) or (bdmger.cards_to_draw[1].get_card_type() == 0) or (bdmger.cards_to_draw[2].get_card_type() == 0)):
+                    if (bdmger.cards_to_draw[0].get_card_type() == 0):
                         card_index_which_can_be_chosen.append(0)
-                    if (bdmger.cards_to_draw[1].get_card_type() != 0):
+                    if (bdmger.cards_to_draw[1].get_card_type() == 0):
                         card_index_which_can_be_chosen.append(1)
-                    if (bdmger.cards_to_draw[2].get_card_type() != 0):
+                    if (bdmger.cards_to_draw[2].get_card_type() == 0):
                         card_index_which_can_be_chosen.append(2)
                 else:
 
@@ -130,7 +162,7 @@ def chose_card(bdmger):
 
         else:
 
-            if (min(card_to_draw_mana_cost) > 3):
+            if (min(card_to_draw_mana_cost) > 4):
 
                     if (number_of_objects >= 5):
 
@@ -156,7 +188,7 @@ def chose_card(bdmger):
                     for i in range(len(card_to_draw_mana_cost)):
 
                         if (card_to_draw_mana_cost[i] > 7):
-                            if (number_of_cards_min_7_mana >= 6):
+                            if (number_of_cards_min_7_mana >= 5):
                                 if i in card_index_which_can_be_chosen:
                                     card_index_which_can_be_chosen.pop(card_index_which_can_be_chosen.index(i))
 
@@ -164,7 +196,7 @@ def chose_card(bdmger):
             else:
 
                 for i in range (len(card_to_draw_mana_cost)):
-                    if (card_to_draw_mana_cost[i] <= 3):
+                    if (card_to_draw_mana_cost[i] <= 4):
                         card_index_which_can_be_chosen.append(i)
 
         # card_index_which_can_be_chosen contient les indices, il suffit de prendre la meilleure carte
@@ -411,70 +443,68 @@ class Card(object):
 
     def card_evaluation (self):
 
-            result =0
+        global weight_draw_card, weight_battle_card
 
-            weight_breakthrought = 1
-            weight_charge = 1
-            weight_drain = 1
-            weight_guard = 1
-            weight_letal = 3
-            weight_ward = 3
-            weight_attack = 1
-            weight_cost = 1/3
-            weight_defense = 4
+        card_result =0
+        if (count < 30):
+            [weight_breakthrought, weight_charge, weight_drain, weight_guard, weight_letal, weight_ward, weight_attack, weight_cost, weight_defense, weight_opponent_card] = weight_draw_card
 
-            weight_card = [weight_breakthrought,weight_charge,weight_drain,weight_guard,weight_ward,weight_attack,weight_cost,weight_defense]
+        else:
+            [weight_breakthrought, weight_charge,weight_drain,weight_guard,weight_letal,weight_ward,weight_attack,weight_cost,weight_defense,weight_opponent_card] = weight_battle_card
 
-            #Evaluation of all cards
+        #Evaluation of all cards
 
-            breakthrought = 0
-            charge = 0
-            drain = 0
-            guard = 0
-            letal = 0
-            ward = 0
+        breakthrought = 0
+        charge = 0
+        drain = 0
+        guard = 0
+        letal = 0
+        ward = 0
 
-            spells = self.get_abilities()
-            if "B" in spells :
-                breakthrought = 1 * weight_breakthrought
-            if "C" in spells :
-                charge = 1 * weight_charge
-            if "D" in spells :
-                drain = 1 * weight_drain
-            if "G" in spells :
-                guard = 1 * weight_guard
-            if "L" in spells :
-                letal = 1 * weight_letal
-            if "W" in spells :
-                ward = 1 * weight_ward
+        spells = self.get_abilities()
+        if "B" in spells :
+            breakthrought = 1 * weight_breakthrought
+        if "C" in spells :
+            charge = 1 * weight_charge
+        if "D" in spells :
+            drain = 1 * weight_drain
+        if "G" in spells :
+            guard = 1 * weight_guard
+        if "L" in spells :
+            letal = 1 * weight_letal
+        if "W" in spells :
+            ward = 1 * weight_ward
 
-            attack = self.get_attack() * weight_attack
-            cost = self.get_cost() * weight_cost
-            defense = self.get_defense() * weight_defense
+        attack = self.get_attack() * weight_attack
+        if (count<30):
+            cost = 1/((self.get_cost() * weight_cost)+1)
+        else:
+            cost = self.get_cost() * weight_cost + 1
+        defense = self.get_defense() * weight_defense
 
-            location = self.get_location()
-            type = self.get_card_type()
+        location = self.get_location()
+        type = self.get_card_type()
 
-            if location == 0:
+        if location == 0:
 
-                if type == 0:
-                    #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                    result += (attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)*(cost)
+            if type == 0:
+                #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)),file=sys.stderr)
+                card_result += (attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost)
 
-                else:
-                    #print(str(i.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                    if (type != 3 ):
-                        result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
-                    else:
-                         result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
-            elif location == 1:
-                    #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                    result += (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
             else:
-                #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                result -= (attack + (attack * breakthrought) + (attack * drain)  + defense + (defense * guard) + letal + ward)
+                #print(str(i.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
+                if (type != 3 ):
+                    card_result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost)
+                else:
+                    card_result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost)
+        elif location == 1:
+            #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
+            card_result += (attack + (attack * breakthrought) + (attack * drain)  + defense/3 + (defense/3 * guard) + letal + ward)
+        else:
+            #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
+            card_result -= weight_opponent_card*(weight_opponent_card*attack + (weight_opponent_card*attack * breakthrought) + (weight_opponent_card*attack * drain)  + defense/3 + (defense * guard) + letal + ward)
 
-            return result
+        return card_result
 
 class Hero(object):
     """
@@ -532,7 +562,7 @@ class BoardManager(object):
         self.enemys_board = []
         self.my_deck = []
         self.number_of_object_in_deck = 0
-        self.creatures_mana_cost_list = [0,0,0,0,0,0,0,0,0,0,0,0]
+        self.creatures_mana_cost_list = [0,0,0,0,0,0,0,0,0,0,0,0,0]
         self.cards_to_draw = []
         self.me = None
 
@@ -641,7 +671,7 @@ class BoardManager(object):
         carte_choisie = chose_card(self)
         self.my_deck += [self.cards_to_draw[carte_choisie]]
         if (self.cards_to_draw[carte_choisie].get_card_type() == 0):
-            self.creatures_mana_cost_list[self.cards_to_draw[carte_choisie].get_cost() - 1] += 1
+            self.creatures_mana_cost_list[self.cards_to_draw[carte_choisie].get_cost()] += 1
         else :
             self.number_of_object_in_deck += 1
 
@@ -750,16 +780,15 @@ class BoardManager(object):
                           for id in summonable]
 
         # People I can attack
-
         to_attack = [card for card in self.enemys_board
                      if
                      ("G" in card.get_abilities())
                      ]
         to_attack = [card.get_instance_id() for card in to_attack]
 
-
         if len(to_attack) == 0:
             to_attack = self.enemys_board
+
             to_attack = [card.get_instance_id() for card in to_attack] + [-1]
 
 
@@ -850,157 +879,32 @@ class BoardManager(object):
         global count
         result = 0
 
-    # Evaluation during Draw phase
+        #Evaluation of the state of Heroes
+        weight_hero = [health_weight, deck_weight, mana_weight, rune_weight, hand_weight]
 
-        if (count<30):
+        #print("HEALTH: " + str ((self.me.get_player_health() - self.opponent_hero.get_player_health())*health_weight),file=sys.stderr)
+        result += (self.me.get_player_health() - self.opponent_hero.get_player_health())*health_weight
+        #print("DECK: " + str ((self.me.get_player_deck() - self.opponent_hero.get_player_deck())*deck_weight),file=sys.stderr)
+        result += (self.me.get_player_deck() - self.opponent_hero.get_player_deck())*deck_weight
+        #print("MANA: " + str (-(self.me.get_player_mana())*mana_weight),file=sys.stderr)
+        result += -(self.me.get_player_mana())*mana_weight
+        #print("RUNE: " + str ((self.me.get_player_rune() - self.opponent_hero.get_player_rune())*rune_weight),file=sys.stderr)
+        result += (self.me.get_player_rune() - self.opponent_hero.get_player_rune())*rune_weight
+        #print("HAND" + str ((len(self.get_my_hand()) - self.opponent_hand)*hand_weight),file=sys.stderr)
+        result += (len(self.get_my_hand()) - self.opponent_hand)*hand_weight
 
-            #Weight of Card's attribute
+        #If we can kill the opposent we do it
+        if (self.opponent_hero.get_player_health() <= 0):
+            result += 9999
 
-            weight_breakthrought = 1
-            weight_charge = 1
-            weight_drain = 1
-            weight_guard = 1
-            weight_letal = 6
-            weight_ward = 6
-            weight_attack = 1
-            weight_cost = 1
-            weight_defense = 1
+        #Evaluation of all cards
 
-            weight_card = [weight_breakthrought,weight_charge,weight_drain,weight_guard,weight_ward,weight_attack,weight_cost,weight_defense]
+        for i in (self.my_board + self.enemys_board + self.my_hand) :
 
-            #Evaluation of the card picked
-
-            chosen_card = self.my_deck[-1]
-
-            breakthrought = 0
-            charge = 0
-            drain = 0
-            guard = 0
-            letal = 0
-            ward = 0
-
-            spells = chosen_card.get_abilities()
-            if "B" in spells :
-                breakthrought = 1 * weight_breakthrought
-            if "C" in spells :
-                charge = 1 * weight_charge
-            if "D" in spells :
-                drain = 1 * weight_drain
-            if "G" in spells :
-                guard = 1 * weight_guard
-            if "L" in spells :
-                letal = 1 * weight_letal
-            if "W" in spells :
-                ward = 1 * weight_ward
-
-            attack = chosen_card.get_attack() * weight_attack
-            cost = chosen_card.get_cost() * weight_cost
-            defense = chosen_card.get_defense() * weight_defense
-
-            location = chosen_card.get_location()
-            type = chosen_card.get_card_type()
-
-            if type == 0:
-                #print(str(chosen_card.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                result += (attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)
-
-            elif (type == 3 or type == 2):
-                result += abs((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1))
-            else:
-                #print(str(chosen_card.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
-
-
-    #Evaluation during Battle Phase
-
-        else:
-
-            #Evaluation of the state of Heroes
-
-            health_weight = 0.25
-            deck_weight = 1/6
-            mana_weight = 5
-            rune_weight = 1
-            hand_weight = 1
-
-            weight_hero = [health_weight, deck_weight, mana_weight, rune_weight, hand_weight]
-
-            #print("HEALTH: " + str ((self.me.get_player_health() - self.opponent_hero.get_player_health())*health_weight),file=sys.stderr)
-            result += (self.me.get_player_health() - self.opponent_hero.get_player_health())*health_weight
-            #print("DECK: " + str ((self.me.get_player_deck() - self.opponent_hero.get_player_deck())*deck_weight),file=sys.stderr)
-            result += (self.me.get_player_deck() - self.opponent_hero.get_player_deck())*deck_weight
-            #print("MANA: " + str (-(self.me.get_player_mana())*mana_weight),file=sys.stderr)
-            result += -(self.me.get_player_mana())*mana_weight
-            #print("RUNE: " + str ((self.me.get_player_rune() - self.opponent_hero.get_player_rune())*rune_weight),file=sys.stderr)
-            result += (self.me.get_player_rune() - self.opponent_hero.get_player_rune())*rune_weight
-            #print("HAND" + str ((len(self.get_my_hand()) - self.opponent_hand)*hand_weight),file=sys.stderr)
-            result += (len(self.get_my_hand()) - self.opponent_hand)*hand_weight
-            if (self.opponent_hero.get_player_health() == 0):
-                result += 9999
-            #Weight of Card's attribute
-
-            weight_breakthrought = 1
-            weight_charge = 1
-            weight_drain = 1
-            weight_guard = 1
-            weight_letal = 3
-            weight_ward = 3
-            weight_attack = 1
-            weight_cost = 1
-            weight_defense = 1
-
-            weight_card = [weight_breakthrought,weight_charge,weight_drain,weight_guard,weight_ward,weight_attack,weight_cost,weight_defense]
-
-            #Evaluation of all cards
-
-            for i in (self.my_board + self.enemys_board + self.my_hand) :
-
-                breakthrought = 0
-                charge = 0
-                drain = 0
-                guard = 0
-                letal = 0
-                ward = 0
-
-                spells = i.get_abilities()
-                if "B" in spells :
-                    breakthrought = 1 * weight_breakthrought
-                if "C" in spells :
-                    charge = 1 * weight_charge
-                if "D" in spells :
-                    drain = 1 * weight_drain
-                if "G" in spells :
-                    guard = 1 * weight_guard
-                if "L" in spells :
-                    letal = 1 * weight_letal
-                if "W" in spells :
-                    ward = 1 * weight_ward
-
-                attack = i.get_attack() * weight_attack
-                cost = i.get_cost() * weight_cost
-                defense = i.get_defense() * weight_defense
-
-                location = i.get_location()
-                type = i.get_card_type()
-
-                if location == 0:
-
-                    if type == 0:
-                        #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                        result += (attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)
-
-                    else:
-                        #print(str(i.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                        result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)
-
-                elif location == 1:
-                        #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                        result += (attack + (attack * breakthrought) + (attack * drain)  + defense/3 + (defense/3 * guard) + letal + ward)
-                else:
-                    #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-                    result -= 2*(2*attack + (2*attack * breakthrought) + (2*attack * drain)  + defense/3 + (defense * guard) + letal + ward)
+            result += i.card_evaluation()
 
         return result
+
 class GameManager(object):
     """
     Controls game actions. Decision making happens here.
