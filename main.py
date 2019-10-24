@@ -23,9 +23,6 @@ weight_draw_attack = 1
 weight_draw_cost = 2
 weight_draw_defense = 1
 weight_draw_opponent = 0
-
-weight_draw_card = [weight_draw_breakthrought, weight_draw_charge, weight_draw_drain, weight_draw_guard, weight_draw_letal, weight_draw_ward, weight_draw_attack, weight_draw_cost, weight_draw_defense, weight_draw_opponent]
-
 weight_battle_breakthrought = 1
 weight_battle_charge = 1
 weight_battle_drain = 1
@@ -36,17 +33,21 @@ weight_battle_attack = 1
 weight_battle_cost = 1
 weight_battle_defense = 1
 weight_battle_opponent = 1.5
+weight_health = 1/4
+weight_deck = 1/6
+weight_mana = 4
+weight_rune = 1
+weight_hand = 1
 
-weight_battle_card = [weight_battle_breakthrought,weight_battle_charge,weight_battle_drain,weight_battle_guard,weight_battle_letal,weight_battle_ward,weight_battle_attack,weight_battle_cost,weight_battle_defense,weight_battle_opponent]
 
-health_weight = 1/4
-deck_weight = 1/6
-mana_weight = 4
-rune_weight = 1
-hand_weight = 1
+weights_draw_card = [weight_draw_breakthrought, weight_draw_charge, weight_draw_drain, weight_draw_guard, weight_draw_letal, weight_draw_ward, weight_draw_attack, weight_draw_cost, weight_draw_defense, weight_draw_opponent]
+
+weights_battle_card = [weight_battle_breakthrought,weight_battle_charge,weight_battle_drain,weight_battle_guard,weight_battle_letal,weight_battle_ward,weight_battle_attack,weight_battle_cost,weight_battle_defense,weight_battle_opponent]
+
+weights_hero = [weight_health, weight_deck, weight_mana, weight_rune, weight_hand]
+
 
 @contextmanager
-
 def timeout(time):
     # Register a function to raise a TimeoutError on the signal.
     signal.signal(signal.SIGALRM, raise_timeout)
@@ -66,6 +67,7 @@ def timeout(time):
 def raise_timeout(signum, frame):
     raise TimeoutError
 
+
 def simulation (board):
     sim_count = 0
     final_boards = []
@@ -79,9 +81,9 @@ def simulation (board):
             simulated_board = deepcopy(board)
             simulated_board.generate_a_combo()
             final_boards.append(simulated_board)
-        #final_boards.sort(reverse = True ,key=BoardManager.evaluate)
+        # final_boards.sort(reverse = True ,key=BoardManager.evaluate)
 
-        #Mutation
+        # Mutation
 
         while (True):
             boards_to_mutate = []
@@ -96,17 +98,18 @@ def simulation (board):
                 for j in range(mutate_from):
                     prefixcommand += [board_to_mutate.command[j]]
 
-                #print("prefix "+ str(sim_count)+ " : " + str(prefixcommand),file=sys.stderr)
+                # print("prefix "+ str(sim_count)+ ": " + str(prefixcommand),file=sys.stderr)
                 new_board.play_commands(prefixcommand)
                 new_board.generate_a_combo()
-                #print("combo "+ str(sim_count)+ " : " + str(new_board.command) ,file=sys.stderr)
+                # print("combo "+ str(sim_count)+ ": " + str(new_board.command) ,file=sys.stderr)
                 sim_count += 1
                 boards_to_mutate.append(new_board)
 
             final_boards = boards_to_mutate
-    #final_boards.sort(reverse = True ,key=BoardManager.evaluate)
-    print(sim_count+1, file= sys.stderr)
+    # final_boards.sort(reverse = True ,key=BoardManager.evaluate)
+    print(sim_count+1, file=sys.stderr)
     return max(final_boards,key=BoardManager.evaluate)
+
 
 def chose_card(bdmger):
     """
@@ -116,7 +119,7 @@ def chose_card(bdmger):
     max_object = 5
 
     if (count < 17):
-        chosen_card = max(bdmger.cards_to_draw, key = Card.card_evaluation)
+        chosen_card = max(bdmger.cards_to_draw, key=Card.card_evaluation)
         index = bdmger.cards_to_draw.index(chosen_card)
 
         return index
@@ -128,9 +131,7 @@ def chose_card(bdmger):
         number_of_cards_min_7_mana = sum(bdmger.creatures_mana_cost_list[6:])
         number_of_cards_max_3_mana = sum(bdmger.creatures_mana_cost_list[:4])
 
-
-        if(number_of_cards_max_3_mana >= 10 ):
-
+        if(number_of_cards_max_3_mana >= 10):
 
             if (number_of_objects >= 5):
 
@@ -192,7 +193,6 @@ def chose_card(bdmger):
                                 if i in card_index_which_can_be_chosen:
                                     card_index_which_can_be_chosen.pop(card_index_which_can_be_chosen.index(i))
 
-
             else:
 
                 for i in range (len(card_to_draw_mana_cost)):
@@ -207,7 +207,7 @@ def chose_card(bdmger):
         for i in card_index_which_can_be_chosen:
             list_of_cards_which_can_be_chosen.append(bdmger.cards_to_draw[i])
 
-        chosen_card = max(list_of_cards_which_can_be_chosen, key = Card.card_evaluation)
+        chosen_card = max(list_of_cards_which_can_be_chosen, key=Card.card_evaluation)
         index = bdmger.cards_to_draw.index(chosen_card)
 
         return index
@@ -224,7 +224,7 @@ def battle_action(bdmger):
         action_id = random.randint(0, len(actions) - 1)
     action = actions[action_id]
     bdmger.add_command(action)
-    # print("battle action : " + action, file=sys.stderr)
+    # print("battle action: " + action, file=sys.stderr)
     return ("PASS" in action)
 
 
@@ -427,7 +427,7 @@ class Card(object):
         else:
             self.abilities = self.abilities.replace("W", "-")
 
-        if (self.defense <= 0 or ("L" in target_card.abilities)) :
+        if (self.defense <= 0 or ("L" in target_card.abilities)):
             # self = None
             self.location = -2
 
@@ -439,22 +439,22 @@ class Card(object):
             bdmger.opponent_hero.player_health -= (self.attack - points)
         self.has_attacked = True
         # print(command, file=sys.stderr)
-        
+
         if ("D" in self.abilities):
             bdmger.me.player_health += self.attack
-            
+
     def card_evaluation (self):
 
-        global weight_draw_card, weight_battle_card
+        global weights_draw_card, weights_battle_card
 
         card_result =0
         if (count < 30):
-            [weight_breakthrought, weight_charge, weight_drain, weight_guard, weight_letal, weight_ward, weight_attack, weight_cost, weight_defense, weight_opponent_card] = weight_draw_card
+            [weight_breakthrought, weight_charge, weight_drain, weight_guard, weight_letal, weight_ward, weight_attack, weight_cost, weight_defense, weight_opponent_card] = weights_draw_card
 
         else:
-            [weight_breakthrought, weight_charge,weight_drain,weight_guard,weight_letal,weight_ward,weight_attack,weight_cost,weight_defense,weight_opponent_card] = weight_battle_card
+            [weight_breakthrought, weight_charge,weight_drain,weight_guard,weight_letal,weight_ward,weight_attack,weight_cost,weight_defense,weight_opponent_card] = weights_battle_card
 
-        #Evaluation of all cards
+        # Evaluation of all cards
 
         breakthrought = 0
         charge = 0
@@ -464,55 +464,54 @@ class Card(object):
         ward = 0
 
         spells = self.get_abilities()
-        if "B" in spells :
+        if "B" in spells:
             breakthrought = 1 * weight_breakthrought
-        if "C" in spells :
+        if "C" in spells:
             charge = 1 * weight_charge
-        if "D" in spells :
+        if "D" in spells:
             drain = 1 * weight_drain
-        if "G" in spells :
+        if "G" in spells:
             guard = 1 * weight_guard
-        if "L" in spells :
+        if "L" in spells:
             letal = 1 * weight_letal
-        if "W" in spells :
+        if "W" in spells:
             ward = 1 * weight_ward
 
         attack = self.get_attack() * weight_attack
-        
+
         location = self.get_location()
         type = self.get_card_type()
-        
+
         if (count<30):
             if (type == 0):
                 cost = 1/((self.get_cost() * weight_cost)+1)
-            else : 
+            else:
                 cost = self.get_cost() * weight_cost + 1
         else:
             cost = self.get_cost() * weight_cost + 1
         defense = self.get_defense() * weight_defense
 
-     
-
         if location == 0:
 
             if type == 0:
-                #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)),file=sys.stderr)
+                # print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost+1)),file=sys.stderr)
                 card_result += (attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)/(cost)
 
             else:
-                #print(str(i.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
-                if (type != 3 ):
+                # print(str(i.get_instance_id())+ ": "  + str ((attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost+1)),file=sys.stderr)
+                if (type != 3):
                     card_result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost)
                 else:
                     card_result += (1/2)*(attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost)
         elif location == 1:
-            #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
+            # print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
             card_result += (attack + (attack * breakthrought) + (attack * drain)  + defense/3 + (defense/3 * guard) + letal + ward)
         elif (location == -1):
-            #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
+            # print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
             card_result -= weight_opponent_card*(weight_opponent_card*attack + (weight_opponent_card*attack * breakthrought) + (weight_opponent_card*attack * drain)  + defense/3 + (defense * guard) + letal + ward)
 
         return card_result
+
 
 class Hero(object):
     """
@@ -680,7 +679,7 @@ class BoardManager(object):
         self.my_deck += [self.cards_to_draw[carte_choisie]]
         if (self.cards_to_draw[carte_choisie].get_card_type() == 0):
             self.creatures_mana_cost_list[self.cards_to_draw[carte_choisie].get_cost()] += 1
-        else :
+        else:
             self.number_of_object_in_deck += 1
 
         command = ["PICK {}".format(carte_choisie)]
@@ -707,7 +706,7 @@ class BoardManager(object):
             target_id = target_card.get_instance_id()
         card.attack_something(self, target_card)
         self.actualize_board()
-        # print("bdmger attack : " + self.command[-1], file=sys.stderr)
+        # print("bdmger attack: " + self.command[-1], file=sys.stderr)
 
     def use(self, item, target=None):
         """
@@ -720,13 +719,13 @@ class BoardManager(object):
         self.me.pay_mana(item.get_cost())
         item.use(self, target)
         self.actualize_board()
-        # print("bdmger use : " + self.command[-1], file=sys.stderr)
+        # print("bdmger use: " + self.command[-1], file=sys.stderr)
 
     def add_command(self, command):
         """
         Parse command and applies it.
         """
-        # print("bdmger add_command before : ", file=sys.stderr)
+        # print("bdmger add_command before: ", file=sys.stderr)
         # print(self.command, file=sys.stderr)
 
         tmp_list = command.split(";")
@@ -741,7 +740,7 @@ class BoardManager(object):
             self.summon(card)
 
         else:
-            #print(command,file=sys.stderr)
+            # print(command,file=sys.stderr)
             id1, id2 = tmp_list[1], tmp_list[2]
             id1, id2 = int(id1), int(id2)
             card1 = [c for c in self.my_board + self.my_hand
@@ -756,7 +755,7 @@ class BoardManager(object):
             if tmp_list[0] == "USE":
                 self.use(card1, card2)
         self.command += [command]
-        # print("bdmger add_command after : ", file=sys.stderr)
+        # print("bdmger add_command after: ", file=sys.stderr)
         # print(self.command, file=sys.stderr)
 
     def play_commands(self, commands):
@@ -766,13 +765,13 @@ class BoardManager(object):
         """
         for i in commands:
             self.add_command(i)
-        # print("bdmger play_commands : ", file=sys.stderr)
+        # print("bdmger play_commands: ", file=sys.stderr)
         # print(self.command, file=sys.stderr)
 
     def availabilities(self):
         """
         Returns a list of command strings giving legal actions to take.
-        Ex : ["SUMMON 1;","ATTACK 3 -1;"]
+        Ex: ["SUMMON 1;","ATTACK 3 -1;"]
         """
         legal_actions = ["PASS ; "]
 
@@ -798,7 +797,6 @@ class BoardManager(object):
             to_attack = self.enemys_board
 
             to_attack = [card.get_instance_id() for card in to_attack] + [-1]
-
 
         # Who I can attack them with
         # Cards that were just summoned ?
@@ -863,7 +861,7 @@ class BoardManager(object):
                 legal_actions.append("USE {} {}; "
                                      .format(str(id1), str(id2)))
 
-        #print(legal_actions, file=sys.stderr)
+        # print(legal_actions, file=sys.stderr)
         return legal_actions
 
     def generate_a_combo(self):
@@ -871,13 +869,13 @@ class BoardManager(object):
         Generates a legal combo and stores it as a string list
         in command attribute
         """
-        # print("bdmger generate_a_combo before : ", file=sys.stderr)
+        # print("bdmger generate_a_combo before: ", file=sys.stderr)
         # print(self.command, file=sys.stderr)
 
         while not battle_action(self):
             pass
 
-        # print("bdmger generate_a_combo after : ", file=sys.stderr)
+        # print("bdmger generate_a_combo after: ", file=sys.stderr)
         # print(self.command, file=sys.stderr)
 
     def evaluate(self):
@@ -887,31 +885,32 @@ class BoardManager(object):
         global count
         result = 0
 
-        #Evaluation of the state of Heroes
-        weight_hero = [health_weight, deck_weight, mana_weight, rune_weight, hand_weight]
+        # Evaluation of the state of Heroes
+        [health_weight, deck_weight, mana_weight, rune_weight, hand_weight] = weights_hero
 
-        #print("HEALTH: " + str ((self.me.get_player_health() - self.opponent_hero.get_player_health())*health_weight),file=sys.stderr)
+        # print("HEALTH: " + str ((self.me.get_player_health() - self.opponent_hero.get_player_health())*health_weight),file=sys.stderr)
         result += (self.me.get_player_health() - self.opponent_hero.get_player_health())*health_weight
-        #print("DECK: " + str ((self.me.get_player_deck() - self.opponent_hero.get_player_deck())*deck_weight),file=sys.stderr)
+        # print("DECK: " + str ((self.me.get_player_deck() - self.opponent_hero.get_player_deck())*deck_weight),file=sys.stderr)
         result += (self.me.get_player_deck() - self.opponent_hero.get_player_deck())*deck_weight
-        #print("MANA: " + str (-(self.me.get_player_mana())*mana_weight),file=sys.stderr)
+        # print("MANA: " + str (-(self.me.get_player_mana())*mana_weight),file=sys.stderr)
         result += -(self.me.get_player_mana())*mana_weight
-        #print("RUNE: " + str ((self.me.get_player_rune() - self.opponent_hero.get_player_rune())*rune_weight),file=sys.stderr)
+        # print("RUNE: " + str ((self.me.get_player_rune() - self.opponent_hero.get_player_rune())*rune_weight),file=sys.stderr)
         result += (self.me.get_player_rune() - self.opponent_hero.get_player_rune())*rune_weight
-        #print("HAND" + str ((len(self.get_my_hand()) - self.opponent_hand)*hand_weight),file=sys.stderr)
+        # print("HAND" + str ((len(self.get_my_hand()) - self.opponent_hand)*hand_weight),file=sys.stderr)
         result += (len(self.get_my_hand()) - self.opponent_hand)*hand_weight
 
-        #If we can kill the opposent we do it
+        # If we can kill the opposent we do it
         if (self.opponent_hero.get_player_health() <= 0):
             result += 9999
 
-        #Evaluation of all cards
+        # Evaluation of all cards
 
-        for i in (self.my_board + self.enemys_board + self.my_hand) :
+        for i in (self.my_board + self.enemys_board + self.my_hand):
 
             result += i.card_evaluation()
 
         return result
+
 
 class GameManager(object):
     """
@@ -946,10 +945,10 @@ class GameManager(object):
     def battle_phase(self):
         """
         Choses battle actions to take and returns them in a command string.
-        TODO : remplacer par keski faut.
+        TODO: remplacer par keski faut.
         """
         simulation_result = simulation(self.bdmger)
-        print("Result of Simulation :" + str(simulation_result.command), file=sys.stderr)
+        print("Result of Simulation:" + str(simulation_result.command), file=sys.stderr)
 
         self.bdmger.play_commands(simulation_result.command)
 
