@@ -16,12 +16,12 @@ count = 0
 weight_draw_breakthrought = 1
 weight_draw_charge = 1
 weight_draw_drain = 1
-weight_draw_guard = 1
+weight_draw_guard = 2
 weight_draw_letal = 3
 weight_draw_ward = 3
 weight_draw_attack = 1
-weight_draw_cost = 1/3
-weight_draw_defense = 4
+weight_draw_cost = 2
+weight_draw_defense = 1
 weight_draw_opponent = 0
 
 weight_draw_card = [weight_draw_breakthrought, weight_draw_charge, weight_draw_drain, weight_draw_guard, weight_draw_letal, weight_draw_ward, weight_draw_attack, weight_draw_cost, weight_draw_defense, weight_draw_opponent]
@@ -29,19 +29,19 @@ weight_draw_card = [weight_draw_breakthrought, weight_draw_charge, weight_draw_d
 weight_battle_breakthrought = 1
 weight_battle_charge = 1
 weight_battle_drain = 1
-weight_battle_guard = 1
+weight_battle_guard = 2
 weight_battle_letal = 3
 weight_battle_ward = 3
 weight_battle_attack = 1
 weight_battle_cost = 1
 weight_battle_defense = 1
-weight_battle_opponent = 1
+weight_battle_opponent = 1.5
 
 weight_battle_card = [weight_battle_breakthrought,weight_battle_charge,weight_battle_drain,weight_battle_guard,weight_battle_letal,weight_battle_ward,weight_battle_attack,weight_battle_cost,weight_battle_defense,weight_battle_opponent]
 
 health_weight = 1/4
 deck_weight = 1/6
-mana_weight = 5
+mana_weight = 4
 rune_weight = 1
 hand_weight = 1
 
@@ -71,7 +71,7 @@ def simulation (board):
     final_boards = []
     number_of_boards_at_start = 10
     number_of_person_to_mutate = 5
-    with timeout(0.097):
+    with timeout(0.099):
 
         # Creation of boards to start the evolution
 
@@ -162,7 +162,7 @@ def chose_card(bdmger):
 
         else:
 
-            if (min(card_to_draw_mana_cost) > 4):
+            if (min(card_to_draw_mana_cost) > 3):
 
                     if (number_of_objects >= 5):
 
@@ -196,7 +196,7 @@ def chose_card(bdmger):
             else:
 
                 for i in range (len(card_to_draw_mana_cost)):
-                    if (card_to_draw_mana_cost[i] <= 4):
+                    if (card_to_draw_mana_cost[i] <= 3):
                         card_index_which_can_be_chosen.append(i)
 
         # card_index_which_can_be_chosen contient les indices, il suffit de prendre la meilleure carte
@@ -427,20 +427,22 @@ class Card(object):
         else:
             self.abilities = self.abilities.replace("W", "-")
 
-        if self.defense <= 0:
+        if (self.defense <= 0 or ("L" in target_card.abilities)) :
             # self = None
             self.location = -2
 
-        if target_card.defense <= 0:
+        if (target_card.defense <= 0 or ("L" in self.abilities)):
             target_card.location = -2
 
-        if not (self.location == -2):
-            if (self.has_breakthrough()) and \
-                    (target_card.get_location() == -2):
-                bdmger.opponent_hero.player_health -= (self.attack - points)
+        if (self.has_breakthrough()) and \
+                (target_card.get_location() == -2):
+            bdmger.opponent_hero.player_health -= (self.attack - points)
         self.has_attacked = True
         # print(command, file=sys.stderr)
-
+        
+        if ("D" in self.abilities):
+            bdmger.me.player_health += self.attack
+            
     def card_evaluation (self):
 
         global weight_draw_card, weight_battle_card
@@ -502,11 +504,11 @@ class Card(object):
                 if (type != 3 ):
                     card_result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost)
                 else:
-                    card_result += (attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost)
+                    card_result += (1/2)*(attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward)/(cost)
         elif location == 1:
             #print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
             card_result += (attack + (attack * breakthrought) + (attack * drain)  + defense/3 + (defense/3 * guard) + letal + ward)
-        else:
+        elif (location == -1):
             #print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
             card_result -= weight_opponent_card*(weight_opponent_card*attack + (weight_opponent_card*attack * breakthrought) + (weight_opponent_card*attack * drain)  + defense/3 + (defense * guard) + letal + ward)
 
@@ -996,7 +998,6 @@ while True:
     command = "".join(gMger.bdmger.command)
 
     count += 1
-
     if command == "":
         # print("PASS")
         pass
