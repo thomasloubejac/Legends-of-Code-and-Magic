@@ -131,7 +131,7 @@ def chose_card(bdmger):
         number_of_cards_min_7_mana = sum(bdmger.creatures_mana_cost_list[6:])
         number_of_cards_max_3_mana = sum(bdmger.creatures_mana_cost_list[:4])
 
-        if(number_of_cards_max_3_mana >= 10):
+        if(number_of_cards_max_3_mana >= 7):
 
             if (number_of_objects >= 5):
 
@@ -398,9 +398,23 @@ class Card(object):
         """
         bdmger.me.player_health += self.my_health_change
         bdmger.opponent_hero.player_health += self.opponent_health_change
+
         if card is not None:
             card.attack += self.attack
             card.defense += self.defense
+            if (card.defense <= 0):
+                card.location = -2
+            if (card.location == 1):
+                for i in range(len(self.abilities)-1) :
+                    if (card.abilities[i] == "-"):
+                        list_abilities = list(card.abilities)
+                        list_abilities[i]=self.abilities[i]
+                        card.abilities = "".join(list_abilities)
+            elif (card.location == -1):
+                for i in self.abilities :
+                    if (i in card.abilities):
+                         card.abilities=card.abilities.replace(i,"-")
+
         self.location = -2
         # # print(command, file=sys.stderr)
 
