@@ -6,12 +6,9 @@ import signal
 from contextlib import contextmanager
 
 
-# Auto-generated code below aims at helping you parse
-# the standard input according to the problem statement.
-
-
-# game loop
 count = 0
+
+# Weigths Draw
 
 weight_draw_breakthrought = 1
 weight_draw_charge = 1
@@ -23,6 +20,9 @@ weight_draw_attack = 1
 weight_draw_cost = 2
 weight_draw_defense = 1
 weight_draw_opponent = 0
+
+# Weigths Battle
+
 weight_battle_breakthrought = 1
 weight_battle_charge = 1
 weight_battle_drain = 1
@@ -33,12 +33,16 @@ weight_battle_attack = 1
 weight_battle_cost = 1
 weight_battle_defense = 1
 weight_battle_opponent = 1.5
+
+# Weigths Hero in Battle
+
 weight_health = 1/4
 weight_deck = 1/6
 weight_mana = 4
 weight_rune = 1
 weight_hand = 1
 
+# Wheights lists
 
 weights_draw_card = [weight_draw_breakthrought, weight_draw_charge, weight_draw_drain, weight_draw_guard, weight_draw_letal, weight_draw_ward, weight_draw_attack, weight_draw_cost, weight_draw_defense, weight_draw_opponent]
 
@@ -47,8 +51,13 @@ weights_battle_card = [weight_battle_breakthrought,weight_battle_charge,weight_b
 weights_hero = [weight_health, weight_deck, weight_mana, weight_rune, weight_hand]
 
 
+
 @contextmanager
 def timeout(time):
+    """
+    TimeOut definition to end the simulation in time
+    """
+
     # Register a function to raise a TimeoutError on the signal.
     signal.signal(signal.SIGALRM, raise_timeout)
     # Schedule the signal to be sent after ``time``.
@@ -65,10 +74,16 @@ def timeout(time):
 
 
 def raise_timeout(signum, frame):
+    """
+    Not needed here
+    """
     raise TimeoutError
 
 
 def simulation (board):
+    """
+    Simulate the best action list possible thanks to a genetical algorithm
+    """
     sim_count = 0
     final_boards = []
     number_of_boards_at_start = 10
@@ -114,15 +129,20 @@ def simulation (board):
 def chose_card(bdmger):
     """
     Chose the card to draw.
+    Return the index of the card to pick
     To adapt according to strategy.
     """
     max_object = 5
+
+    # In the first part of the draw phase we just pick the best cards
 
     if (count < 17):
         chosen_card = max(bdmger.cards_to_draw, key=Card.card_evaluation)
         index = bdmger.cards_to_draw.index(chosen_card)
 
         return index
+
+    # Then we try to have a good mana repartition and no more than 5 items
 
     else:
         card_index_which_can_be_chosen = []
@@ -458,7 +478,10 @@ class Card(object):
             bdmger.me.player_health += self.attack
 
     def card_evaluation (self):
-
+        """
+        Evaluation of the strenght of a card
+        Return an int
+        """
         global weights_draw_card, weights_battle_card
 
         card_result =0
@@ -565,7 +588,7 @@ class Hero(object):
 
 def process_opponent_actions(actions):
     """
-    TODO mettre qqch ici
+    TODO mettre qqch ici ?
     """
     pass
 
@@ -895,6 +918,7 @@ class BoardManager(object):
     def evaluate(self):
         """
         Evaluate the state of the board
+        Return an int
         """
         global count
         result = 0
@@ -967,7 +991,11 @@ class GameManager(object):
         self.bdmger.play_commands(simulation_result.command)
 
 
+# the standard input according to the problem statement.
+# game loop
+
 while True:
+
     bdmger = BoardManager()
     card_numbers_and_actions = []
 
@@ -1010,10 +1038,12 @@ while True:
 
     command = "".join(gMger.bdmger.command)
 
-    count += 1
+    count += 1 # count gives the turn's number
     if command == "":
         # print("PASS")
         pass
     else:
         # print(command, file=sys.stderr)
+
+        #Giving the command to the game
         print(command)
