@@ -1,5 +1,5 @@
 import sys
-# import math
+import math
 import random
 from copy import deepcopy
 import signal
@@ -7,6 +7,7 @@ from contextlib import contextmanager
 
 
 count = 0
+hero_letal = False
 
 # Weigths Draw
 
@@ -101,6 +102,8 @@ def simulation (board):
         for i in range (number_of_boards_at_start):
             simulated_board = deepcopy(board)
             simulated_board.generate_a_combo()
+            if (hero_letal):
+                return simulated_board
             final_boards.append(simulated_board)
         # final_boards.sort(reverse = True ,key=BoardManager.evaluate)
 
@@ -112,9 +115,9 @@ def simulation (board):
             boards_to_mutate = []
             board_to_mutate = max(final_boards,key=BoardManager.evaluate)
             boards_to_mutate.append(board_to_mutate)
-            final_boards.remove(board_to_mutate)
 
             for i in range (number_of_person_to_mutate):
+
                 board_to_mutate = select_board_to_mutate(final_boards)
                 new_board = deepcopy(board)
                 mutate_from = random.randint(0,len(board_to_mutate.command)-1)
@@ -126,6 +129,8 @@ def simulation (board):
                 # print("prefix "+ str(sim_count)+ ": " + str(prefixcommand),file=sys.stderr)
                 new_board.play_commands(prefixcommand)
                 new_board.generate_a_combo()
+                if (hero_letal):
+                    return new_board
                 # print("combo "+ str(sim_count)+ ": " + str(new_board.command) ,file=sys.stderr)
                 sim_count += 1
                 boards_to_mutate.append(new_board)
@@ -140,13 +145,14 @@ def select_board_to_mutate(bdmgers):
     Select randomly a board to mutate
     A better board will have a better probability to be chosen
     """
-    total_evaluation = sum(s.evaluate() for s in bdmgers)
+    total_evaluation = sum(math.exp(s.evaluate()) for s in bdmgers)
     repartition_function = 0
     rand = random.random()
     chosen_index = len(bdmgers)-1
 
     for i in range(chosen_index):
-        repartition_function += bdmgers[i].evaluate()/total_evaluation
+        repartition_function += math.exp(bdmgers[i].evaluate())/total_evaluation
+        print(repartition_function,file=sys.stderr)
         if (rand < repartition_function):
             chosen_index = i
             break
@@ -473,8 +479,12 @@ class Card(object):
         and BoardManager's informations.
         """
 
+        global hero_letal
+
         if target_card is None:
             bdmger.opponent_hero.player_health -= self.attack
+            if (bdmger.opponent_hero.player_health <= 0):
+                hero_letal = True
             self.has_attacked = True
             return False, False
 
@@ -969,9 +979,6 @@ class BoardManager(object):
         # print("HAND" + str ((len(self.get_my_hand()) - self.opponent_hand)*hand_weight),file=sys.stderr)
         result += (len(self.get_my_hand()) - self.opponent_hand)*hand_weight
 
-        # If we can kill the opposent we do it
-        if (self.opponent_hero.get_player_health() <= 0):
-            result += 9999
 
         # Evaluation of all cards
 
