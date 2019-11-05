@@ -54,6 +54,10 @@ weights_battle_card = [weight_battle_breakthrought,weight_battle_charge,weight_b
 
 weights_hero = [weight_health, weight_deck, weight_mana, weight_rune, weight_hand]
 
+#Simulation parameters
+
+number_of_boards_at_start = 10
+number_of_person_to_mutate = 5
 
 
 @contextmanager
@@ -90,8 +94,6 @@ def simulation (board):
     """
     sim_count = 0
     final_boards = []
-    number_of_boards_at_start = 10
-    number_of_person_to_mutate = 5
     with timeout(0.099):
 
         # Creation of boards to start the evolution
@@ -105,12 +107,16 @@ def simulation (board):
         # Mutation
 
         while (True):
+
+            #Conservation du meilleur board
             boards_to_mutate = []
+            board_to_mutate = max(final_boards,key=BoardManager.evaluate)
+            boards_to_mutate.append(board_to_mutate)
+            final_boards.remove(board_to_mutate)
+
             for i in range (number_of_person_to_mutate):
+                board_to_mutate = select_board_to_mutate(final_boards)
                 new_board = deepcopy(board)
-                board_to_mutate = max(final_boards,key=BoardManager.evaluate)
-                boards_to_mutate.append(board_to_mutate)
-                final_boards.remove(board_to_mutate)
                 mutate_from = random.randint(0,len(board_to_mutate.command)-1)
                 prefixcommand = []
 
@@ -128,6 +134,24 @@ def simulation (board):
     # final_boards.sort(reverse = True ,key=BoardManager.evaluate)
     print(sim_count+1, file=sys.stderr)
     return max(final_boards,key=BoardManager.evaluate)
+
+def select_board_to_mutate(bdmgers):
+    """
+    Select randomly a board to mutate
+    A better board will have a better probability to be chosen
+    """
+    total_evaluation = sum(s.evaluate() for s in bdmgers)
+    repartition_function = 0
+    rand = random.random()
+    chosen_index = len(bdmgers)-1
+
+    for i in range(chosen_index):
+        repartition_function += bdmgers[i].evaluate()/total_evaluation
+        if (rand < repartition_function):
+            chosen_index = i
+            break
+
+    return bdmgers[chosen_index]
 
 
 def chose_card(bdmger):
@@ -956,6 +980,7 @@ class BoardManager(object):
             result += i.card_evaluation()
 
         return result
+
 
 
 class GameManager(object):
