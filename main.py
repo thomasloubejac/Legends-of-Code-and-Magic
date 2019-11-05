@@ -115,10 +115,25 @@ def simulation (board):
             boards_to_mutate = []
             board_to_mutate = max(final_boards,key=BoardManager.evaluate)
             boards_to_mutate.append(board_to_mutate)
+            mutate_from = random.randint(0,len(board_to_mutate.command)-1)
+            new_board = deepcopy(board)
+            prefixcommand = []
 
-            for i in range (number_of_person_to_mutate):
+            for j in range(mutate_from):
+                prefixcommand += [board_to_mutate.command[j]]
 
+            # print("prefix "+ str(sim_count)+ ": " + str(prefixcommand),file=sys.stderr)
+            new_board.play_commands(prefixcommand)
+            new_board.generate_a_combo()
+            if (hero_letal):
+                return new_board
+            # print("combo "+ str(sim_count)+ ": " + str(new_board.command) ,file=sys.stderr)
+            sim_count += 1
+            boards_to_mutate.append(new_board)
+
+            for i in range (number_of_person_to_mutate - 1):
                 board_to_mutate = select_board_to_mutate(final_boards)
+                boards_to_mutate.append(board_to_mutate)
                 new_board = deepcopy(board)
                 mutate_from = random.randint(0,len(board_to_mutate.command)-1)
                 prefixcommand = []
@@ -553,6 +568,9 @@ class Card(object):
             ward = 1 * weight_ward
 
         attack = self.get_attack() * weight_attack
+        if (attack == 0 and count < 30):
+            if (letal == 0):
+                attack = -2
         healthchange = abs(weight_healthchange)
         drawcard = weight_drawcard
         location = self.get_location()
