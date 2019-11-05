@@ -167,7 +167,6 @@ def select_board_to_mutate(bdmgers):
 
     for i in range(chosen_index):
         repartition_function += math.exp(bdmgers[i].evaluate())/total_evaluation
-        print(repartition_function,file=sys.stderr)
         if (rand < repartition_function):
             chosen_index = i
             break
@@ -524,6 +523,8 @@ class Card(object):
         if (self.has_breakthrough()) and \
                 (target_card.get_location() == -2):
             bdmger.opponent_hero.player_health -= (self.attack - points)
+            if (bdmger.opponent_hero.player_health <= 0):
+                hero_letal = True
         self.has_attacked = True
         # print(command, file=sys.stderr)
 
@@ -913,8 +914,9 @@ class BoardManager(object):
                 pass  # don't attack
             else:  # when hasn't attacked AND was not just summon without C
                 for id2 in to_attack:
-                    legal_actions.append("ATTACK {} {}; "
-                                         .format(str(id), str(id2)))
+                    if (not (card.get_attack() == 0) or ("L" in card.get_abilities())):
+                        legal_actions.append("ATTACK {} {}; "
+                                            .format(str(id), str(id2)))
 
         for card in self.my_board:
             id1 = card.get_instance_id()
