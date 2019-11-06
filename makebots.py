@@ -1,4 +1,4 @@
-#!/usr//bin/python3
+#!/Users/SamothXV/anaconda3/bin/python3
 
 import random as rd
 import argparse
@@ -8,9 +8,14 @@ os.system("rm genbots/*")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("size")
+parser.add_argument("draw_weights")
+parser.add_argument("other_weights")
 
 
 args = parser.parse_args()
+
+change_draw = int(args.draw_weights) == 1
+change_others = int(args.other_weights) == 1
 
 with open('main.py','r') as f:
     doc = f.readlines()
@@ -34,7 +39,7 @@ for line in doc:
     elif line.strip() == "result += (len(self.get_my_hand()) - self.opponent_hand)*hand_weight":
         cdoc += "        result += (len(self.get_my_hand()) - len(self.opponent_hand))*hand_weight\n"
     elif line.strip()  ==  "with timeout(0.099):":
-        cdoc += "   with timeout(0.095):\n"
+        cdoc += "    with timeout(0.095):\n"
 
     else:
         cdoc += [line]
@@ -45,7 +50,12 @@ for i in range(int(args.size)-1):
             if line.startswith("weight_"):
                 rep = line.split(" ")[0]
                 value = rd.random()*5
-                f.write("{} = {}\n".format(rep, str(value)))
+                if line.startswith("weight_draw") and not change_draw:
+                    f.write(line)
+                elif not line.startswith("weight_draw") and not change_others:
+                    f.write(line)
+                else:
+                    f.write("{} = {}\n".format(rep, str(value)))
             else:
                 f.write(line)
 
