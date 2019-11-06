@@ -631,7 +631,7 @@ class Card(object):
                     card_result += (1/2)*(attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward + healthchange + drawcard)/(cost)
         elif location == 1:
             # print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-            card_result += ((attack-1) + ((attack-1) * breakthrought) + ((attack-1) * drain)  + defense/3 + (defense/3 * guard) + letal + ward + healthchange + drawcard)
+            card_result += ((attack) + ((attack-1) * breakthrought) + ((attack-1) * drain)  + defense/3 + (defense/3 * guard) + letal + ward + healthchange + drawcard)
         elif (location == -1):
             # print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
             card_result -= weight_opponent_card*(weight_opponent_card*attack + (weight_opponent_card*(attack-1) * breakthrought) + (weight_opponent_card*(attack-1) * drain) + (weight_opponent_card*(attack-1) * charge)  + defense/3 + (defense * guard) + letal + ward)
