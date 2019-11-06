@@ -132,7 +132,7 @@ def simulation (board):
             boards_to_mutate.append(new_board)
 
             for i in range (number_of_person_to_mutate - 1):
-                board_to_mutate = select_board_to_mutate(final_boards)
+                board_to_mutate = select_board_to_mutate(final_boards,2)
                 boards_to_mutate.append(board_to_mutate)
                 new_board = deepcopy(board)
                 mutate_from = random.randint(0,len(board_to_mutate.command)-1)
@@ -155,7 +155,7 @@ def simulation (board):
     print(sim_count+1, file=sys.stderr)
     return max(final_boards,key=BoardManager.evaluate)
 
-def select_board_to_mutate(bdmgers, nmeilleur = None):
+def select_board_to_mutate(bdmgers, n = None):
     """
     Select randomly a board to mutate
     A better board will have a better probability to be chosen
@@ -186,7 +186,7 @@ def select_board_to_mutate(bdmgers, nmeilleur = None):
         chosen_boards = []
         for i in range(n-1):
             chosen_element = random.randint(0,len(bdmgers)-1)
-            chosen_boards += boards[i]
+            chosen_boards.append(bdmgers[i])
         return max(chosen_boards,key=BoardManager.evaluate)
 
 
