@@ -52,5 +52,3 @@ for i in range(int(args.size)-1):
 with open('corrected_main.py'.format(str(i)),'w') as f:
     for line in cdoc:
         f.write(line)
-
-os.system("cp corrected_main.py genbots/player19.py")
