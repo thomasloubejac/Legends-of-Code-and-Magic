@@ -155,7 +155,7 @@ def simulation (board):
     print(sim_count+1, file=sys.stderr)
     return max(final_boards,key=BoardManager.evaluate)
 
-def select_board_to_mutate(bdmgers, nmeilleur):
+def select_board_to_mutate(bdmgers, nmeilleur = None):
     """
     Select randomly a board to mutate
     A better board will have a better probability to be chosen
@@ -186,6 +186,8 @@ def select_board_to_mutate(bdmgers, nmeilleur):
         chosen_boards = []
         for i in range(n-1):
             chosen_element = random.randint(0,len(bdmgers)-1)
+            chosen_boards += boards[i]
+        return max(chosen_boards,key=BoardManager.evaluate)
 
 
 
