@@ -18,7 +18,7 @@ def change_weights(bot1, bot2):
         if op==3:
             bot += [bot2[i]]
         if rd.random() < mut_prob :
-            bot[-1] += rd.gauss(0,0.5)
+            bot[-1] += rd.gauss(0,1)
             if bot[-1] < 0:
                 bot[-1] = 0
             if bot[-1] > 5:
