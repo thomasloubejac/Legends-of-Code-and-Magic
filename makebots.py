@@ -44,7 +44,7 @@ for line in doc:
     else:
         cdoc += [line]
 
-for i in range(int(args.size)-1):
+for i in range(int(args.size)):
     with open('genbots/player{}.py'.format(str(i)),'w') as f:
         for line in cdoc:
             if line.startswith("weight_"):
