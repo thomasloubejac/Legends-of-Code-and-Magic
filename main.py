@@ -179,24 +179,16 @@ def select_board_to_mutate(bdmgers, n = None):
     Select randomly a board to mutate
     A better board will have a better probability to be chosen
     """
+    sigm = lambda x : int(x.split('.')[0].split('r')[1])
     if (n == None):
-        total_evaluation = 0
-        for i in bdmgers:
-            eval = i.evaluate()
-            if (eval<0):
-                total_evaluation += -1/eval
-            else:
-                total_evaluation += eval + 1
+        total_evaluation = sum(sigm(s.evaluate()) for s in bdmgers)
         repartition_function = 0
         rand = random.random()
         chosen_index = len(bdmgers)-1
 
         for i in range(chosen_index):
             eval = bdmgers[i].evaluate()
-            if (eval<-1):
-                repartition_function += (-1/eval)/total_evaluation
-            else:
-                repartition_function += (eval + 2)/total_evaluation
+            repartition_function += sigm(eval)/total_evaluation
             if (rand < repartition_function):
                 chosen_index = i
                 break
@@ -1061,11 +1053,13 @@ class GameManager(object):
         global count
         # print("gMger manages before: ", file=sys.stderr)
         # print(self.bdmger.command, file=sys.stderr)
-
-        if count < 30:
-            self.draw_phase()
-        else:
-            self.battle_phase()
+        try:
+            if count < 30:
+                self.draw_phase()
+            else:
+                self.battle_phase()
+        except Exception as e:
+            print(e, file=sys.stderr)
 
         # print("gMger manages after: ", file=sys.stderr)
         # print(self.bdmger.command, file=sys.stderr)
