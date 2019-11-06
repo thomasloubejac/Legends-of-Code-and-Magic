@@ -107,7 +107,7 @@ def simulation (board):
             final_boards.append(simulated_board)
         # final_boards.sort(reverse = True ,key=BoardManager.evaluate)
 
-        # Mutation
+        # Mutation et croisement
 
         while (True):
 
@@ -135,20 +135,39 @@ def simulation (board):
                 board_to_mutate = select_board_to_mutate(final_boards,2)
                 boards_to_mutate.append(board_to_mutate)
                 new_board = deepcopy(board)
+
+
                 mutate_from = random.randint(0,len(board_to_mutate.command)-1)
                 prefixcommand = []
 
                 for j in range(mutate_from):
                     prefixcommand += [board_to_mutate.command[j]]
-
                 # print("prefix "+ str(sim_count)+ ": " + str(prefixcommand),file=sys.stderr)
                 new_board.play_commands(prefixcommand)
-                new_board.generate_a_combo()
-                if (hero_letal):
-                    return new_board
-                # print("combo "+ str(sim_count)+ ": " + str(new_board.command) ,file=sys.stderr)
+
+                # Une chance sur deux de muter:
+
+                if (random.randint(0,1) == 0) :
+                    new_board.generate_a_combo()
+                    if (hero_letal):
+                        return new_board
+                    # print("combo "+ str(sim_count)+ ": " + str(new_board.command) ,file=sys.stderr)
+
+
+                # Une chance sur deux de croiser:
+
+                else:
+                    boards_to_cross_with = final_boards[random.randint(0,len(final_boards)-1)]
+
+                    for i in boards_to_cross_with.command:
+                        if (i in new_board.availabilities()):
+                            new_board.play_commands([i])
+                    if (hero_letal):
+                        return new_board
+
                 sim_count += 1
                 boards_to_mutate.append(new_board)
+
 
             final_boards = boards_to_mutate
     # final_boards.sort(reverse = True ,key=BoardManager.evaluate)
