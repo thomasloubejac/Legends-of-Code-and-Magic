@@ -33,6 +33,8 @@ for line in doc:
         pass
     elif line.strip() == "result += (len(self.get_my_hand()) - self.opponent_hand)*hand_weight":
         cdoc += "        result += (len(self.get_my_hand()) - len(self.opponent_hand))*hand_weight\n"
+    elif line.strip()  ==  "with timeout(0.099):":
+        cdoc += "   with timeout(0.095):\n"
 
     else:
         cdoc += [line]
@@ -46,3 +48,7 @@ for i in range(int(args.size)):
                 f.write("{} = {}\n".format(rep, str(value)))
             else:
                 f.write(line)
+
+with open('corrected_main.py'.format(str(i)),'w') as f:
+    for line in cdoc:
+        f.write(line)
