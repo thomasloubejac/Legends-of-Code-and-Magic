@@ -160,17 +160,26 @@ def select_board_to_mutate(bdmgers):
     Select randomly a board to mutate
     A better board will have a better probability to be chosen
     """
-    total_evaluation = sum(math.exp(s.evaluate()) for s in bdmgers)
+    total_evaluation = 0
+    for i in bdmgers:
+        eval = i.evaluate()
+        if (eval<0):
+            total_evaluation += -1/eval
+        else:
+            total_evaluation += eval + 1
     repartition_function = 0
     rand = random.random()
     chosen_index = len(bdmgers)-1
 
     for i in range(chosen_index):
-        repartition_function += math.exp(bdmgers[i].evaluate())/total_evaluation
+        eval = bdmgers[i].evaluate()
+        if (eval<0):
+            repartition_function += (-1/eval)/total_evaluation
+        else:
+            repartition_function += (eval + 1)/total_evaluation
         if (rand < repartition_function):
             chosen_index = i
             break
-
     return bdmgers[chosen_index]
 
 
