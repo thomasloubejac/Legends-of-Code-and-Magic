@@ -155,32 +155,38 @@ def simulation (board):
     print(sim_count+1, file=sys.stderr)
     return max(final_boards,key=BoardManager.evaluate)
 
-def select_board_to_mutate(bdmgers):
+def select_board_to_mutate(bdmgers, nmeilleur):
     """
     Select randomly a board to mutate
     A better board will have a better probability to be chosen
     """
-    total_evaluation = 0
-    for i in bdmgers:
-        eval = i.evaluate()
-        if (eval<0):
-            total_evaluation += -1/eval
-        else:
-            total_evaluation += eval + 1
-    repartition_function = 0
-    rand = random.random()
-    chosen_index = len(bdmgers)-1
+    if (n == None):
+        total_evaluation = 0
+        for i in bdmgers:
+            eval = i.evaluate()
+            if (eval<0):
+                total_evaluation += -1/eval
+            else:
+                total_evaluation += eval + 1
+        repartition_function = 0
+        rand = random.random()
+        chosen_index = len(bdmgers)-1
 
-    for i in range(chosen_index):
-        eval = bdmgers[i].evaluate()
-        if (eval<0):
-            repartition_function += (-1/eval)/total_evaluation
-        else:
-            repartition_function += (eval + 1)/total_evaluation
-        if (rand < repartition_function):
-            chosen_index = i
-            break
-    return bdmgers[chosen_index]
+        for i in range(chosen_index):
+            eval = bdmgers[i].evaluate()
+            if (eval<-1):
+                repartition_function += (-1/eval)/total_evaluation
+            else:
+                repartition_function += (eval + 2)/total_evaluation
+            if (rand < repartition_function):
+                chosen_index = i
+                break
+        return bdmgers[chosen_index]
+    else:
+        chosen_boards = []
+        for i in range(n-1):
+            chosen_element = random.randint(0,len(bdmgers)-1)
+
 
 
 def chose_card(bdmger):
