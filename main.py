@@ -179,16 +179,24 @@ def select_board_to_mutate(bdmgers, n = None):
     Select randomly a board to mutate
     A better board will have a better probability to be chosen
     """
-    sigm = lambda x : int(x.split('.')[0].split('r')[1])
-    if (n == None):
-        total_evaluation = sum(sigm(s.evaluate()) for s in bdmgers)
+    if (random.randint(0,1) == 0):
+        total_evaluation = 0
+        for i in bdmgers:
+            eval = i.evaluate()
+            if (eval<0):
+                total_evaluation += -1/eval
+            else:
+                total_evaluation += eval + 1
         repartition_function = 0
         rand = random.random()
         chosen_index = len(bdmgers)-1
 
         for i in range(chosen_index):
             eval = bdmgers[i].evaluate()
-            repartition_function += sigm(eval)/total_evaluation
+            if (eval<-1):
+                repartition_function += (-1/eval)/total_evaluation
+            else:
+                repartition_function += (eval + 2)/total_evaluation
             if (rand < repartition_function):
                 chosen_index = i
                 break
@@ -631,7 +639,7 @@ class Card(object):
                     card_result += (1/2)*(attack + (6 * breakthrought) + (6 * charge) + (6 * drain)  + defense + (6 * guard) + letal + ward + healthchange + drawcard)/(cost)
         elif location == 1:
             # print(str(i.get_instance_id())+ ": "  + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
-            card_result += ((attack-1) + ((attack-1) * breakthrought) + ((attack-1) * drain)  + defense/3 + (defense/3 * guard) + letal + ward + healthchange + drawcard)
+            card_result += ((attack) + ((attack-1) * breakthrought) + ((attack-1) * drain)  + defense/3 + (defense/3 * guard) + letal + ward + healthchange + drawcard)
         elif (location == -1):
             # print(str(i.get_instance_id())+ ": " + str ((attack + (attack * breakthrought) + (attack * charge) + (attack * drain)  + defense + (defense * guard) + letal + ward)),file=sys.stderr)
             card_result -= weight_opponent_card*(weight_opponent_card*attack + (weight_opponent_card*(attack-1) * breakthrought) + (weight_opponent_card*(attack-1) * drain) + (weight_opponent_card*(attack-1) * charge)  + defense/3 + (defense * guard) + letal + ward)
