@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 
 size = 10
+mut_prob = 0.2
 
 def change_weights(bot1, bot2):
     bot =  []
@@ -16,6 +17,12 @@ def change_weights(bot1, bot2):
             bot += [bot1[i]]
         if op==3:
             bot += [bot2[i]]
+        if rd.random() < mut_prob :
+            bot[-1] += rd.gauss(0,0.5)
+            if bot[-1] < 0:
+                bot[-1] = 0
+            if bot[-1] > 5:
+                bot[-1] = 5
     return bot
 
 def read_file():
