@@ -31,6 +31,8 @@ for line in doc:
             "card_numbers_and_actions += [input()]",
             "bdmger.add_opponent_informations(opponent_hand, card_numbers_and_actions)"                         ]:
         pass
+    elif line.strip() == "result += (len(self.get_my_hand()) - self.opponent_hand)*hand_weight":
+        cdoc += "        result += (len(self.get_my_hand()) - len(self.opponent_hand))*hand_weight\n"
 
     else:
         cdoc += [line]
