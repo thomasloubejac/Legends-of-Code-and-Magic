@@ -1,74 +1,56 @@
 # Legends-of-Code-and-Magic
 Our solution to this game on the platform Codingame.com
 
-Faire tourner le projet en local :
+This led us to a bot that is ranking top 2 in silver league.
+
+How this works :
+main.py is used as a template and a benchmark to evaluate the quality of a generated player.
+This base player uses genetic algorithms to find a good enough move according to the evalutaion function.
+The evaluation function gives a mark on the impact a certain combination of move will have.
+It has a lot of parameters that were empirically chosen. The goal of these scripts is to optimise the evaluation function.
+This then allows more accurate evaluation of moves, thus leading to better scores.
+
+## prerequisites
+
+* maven
+* java
+* python3
+* git
+
+## set environment 
+
+In your working directory :
 ```
-git clone https://github.com/CodinGame/codingame-game-engine
-git clone https://github.com/CodinGame/LegendsOfCodeAndMagic
-
-cp -r codingame-game-engine/runner/src/main/java/com/codingame/gameengine LegendsOfCodeAndMagic/src/main/java/com/codingame/
-
-vi LegendsOfCodeAndMagic/pom.xml
+git clone https://github.com/thomasloubejac/Legends-of-Code-and-Magic # feel free to rename this one, makes things easier
+git clone https://github.com/fala13/LegendsOfCodeAndMagic
+cd LegendsOfCodeAndMagic
+maven package
+mkdir logs
 ```
-ajouter ces lignes (venant du codingame-gameengine pom.xml) dans le groupe <dependencies>
+The scripts are not that well thought when it comes to paths, rename the ones you come across to fit your situation.
+In Legends-of-Code-and-Magic directory :
 ```
-                <dependency>
-                        <groupId>io.undertow</groupId>
-                        <artifactId>undertow-core</artifactId>
-                        <version>2.0.25.Final</version>
-                </dependency>
-                <dependency>
-                        <groupId>commons-io</groupId>
-                        <artifactId>commons-io</artifactId>
-                        <version>2.4</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.javassist</groupId>
-                        <artifactId>javassist</artifactId>
-                        <version>3.22.0-GA</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.apache.commons</groupId>
-                        <artifactId>commons-lang3</artifactId>
-                        <version>3.5</version>
-                </dependency>
-                <dependency>
-                        <groupId>org.yaml</groupId>
-                        <artifactId>snakeyaml</artifactId>
-                        <version>1.24</version>
-                </dependency>
+chmod +x make_match.py makebots.py algog.py eval.py championnat2.py
 ```
-Pour build le projet : `mvn install` ou `mvn package`
+The `thread_number`parameter in championnat2.py and eval.py should be modified to fit your system. If your unsure how many threads you can use just ```cat /proc/cpuinfo``` and see what happens.
+You also might want to play with the `interval` parameter in case you notice a lot of timeouts happening. These will appear when you comment every ``` > /dev/null 2>&1``` that appear in the `cmd` strings in the scripts.
 
-Pour savoir quoi mettre dans le classpath : `mvn dependency:build-classpath`
-
-mettre ça dans `export CLASSPATH=le truc qu’on vient de sortir`
-
-
-script test :
+## execute scripts
+This happens in Legends-of-Code-and-Magic directory
+### 1. generate random bots
 ```
-#!/bin/bash
+mkdir genbots
+./make_bots 20
+```
+this will generate 20 bots with randomized parameters.
 
-cd LegendsOfCodeAndMagic/target/test-classes/
-java -cp $CLASSPATH Main
+### 2. run the algorithm
+```
+./algog.py
 ```
 
-on execute le script et ça fait un jeu de PlayerEmpty pas très intéressant
-
-pour faire jouer un script python :
+### 3. monitor where it's at
 ```
-vi LegendsOfCodeAndMagic/src/test/java/Main.java
+tail -f perfs
 ```
-
-remplacer 
-```
-gameRunner.addAgent(PlayerEmpty.class);
-gameRunner.addAgent(PlayerEmpty.class);
-```
-par
-```
-gameRunner.addAgent("python3 -u player1.py");
-gameRunner.addAgent("python3 -u player2.py");
-```
-
-Et voilà !!
+to print the win frequencies of the best bot in genbots against the empirical bot in main.py.
