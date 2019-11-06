@@ -1,4 +1,4 @@
-#!/Users/SamothXV/anaconda3/bin/python3
+#!/usr/bin/python3
 
 import random as rd
 import argparse
