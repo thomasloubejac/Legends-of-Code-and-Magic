@@ -1,7 +1,7 @@
 # Legends-of-Code-and-Magic
 Our solution to this game on the platform Codingame.com
 
-This led us to a bot that is ranking top 2 in silver league.
+This led us to a bot that is ranking top 100 in Gold league.
 
 How this works :
 main.py is used as a template and a benchmark to evaluate the quality of a generated player.
